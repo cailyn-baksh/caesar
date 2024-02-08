@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "game.h"
+#include "cipher.h"
 
 void log_game_state(FILE *file, Game *game);
 

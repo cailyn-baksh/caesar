@@ -9,7 +9,6 @@
 #include <ncurses.h>
 
 #include "cipher.h"
-#include "game.h"
 #include "log.h"
 #include "messages.h"
 #include "util.h"
@@ -19,7 +18,7 @@
 void new_game(Game *game) {
     game->mode = NULL;
 
-    game->key = 0;
+    game->key = NULL;
 
     game->ciphertext = NULL;
     game->buffer_size = getmsg(&game->ciphertext);
@@ -37,12 +36,28 @@ void new_game(Game *game) {
 }
 
 void end_game(Game *game) {
+    free(game->key);
     free(game->ciphertext);
+}
+
+
+void new_game_ui(int ch) {
+    static size_t selection = 0;
+
+    /* Handle UI-local input */
+
+    /* Draw UI */
+}
+
+void play_game_ui() {
 }
 
 
 int main() {
     Game game;
+
+    // Seed RNG
+    srand(time(NULL));
 
     // Init ncurses
     initscr();
@@ -52,10 +67,7 @@ int main() {
 
     /* Mainloop */
     for (;;) {
-        /* Draw UI */
-
-
-        /* Handle Input */
+        /* Handle Global Input */
         int ch = getch();
 
         switch (ch) {
@@ -64,6 +76,9 @@ int main() {
                 printw("New Game!\n");
                 break;
         }
+
+        /* Draw UI */
+        new_game_ui(ch);
     }
 
 endprgm:
