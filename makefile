@@ -6,13 +6,15 @@ LIBS = ncurses
 
 OPTIM = -O3 -flto
 DEFS = 'VERSION="$(VERSION)"'
-CFLAGS = -std=gnu2x -Wall -Wextra -Wno-char-subscripts $(OPTIM) $(addprefix -D,$(DEFS))
+WARNINGS = all extra no-char-subscripts no-switch
+CFLAGS = -std=gnu2x $(addprefix -W,$(WARNINGS)) $(OPTIM) $(addprefix -D,$(DEFS))
 
 all: $(patsubst src/%,bin/%.o,$(SRCS))
 	$(CC) $(CFLAGS) -o bin/$(NAME) $^ $(addprefix -l,$(LIBS))
 
 debug: OPTIM = -O0
 debug: DEFS += DEBUG
+debug: WARNINGS += no-unused-label no-unused-variable
 debug: CFLAGS += -g
 debug: all
 
