@@ -1,6 +1,8 @@
 #ifndef _UI_H_
 #define _UI_H_
 
+#include <stddef.h>
+
 /*
  * Events that a UI callback function may recieive
  *
@@ -11,22 +13,13 @@
  */
 typedef enum {
     UIEVENT_CREATE,
-    UIEVENT_CLOSE,
+    UIEVENT_DESTROY,
     UIEVENT_DRAW,
     UIEVENT_KEYPRESS
 } UIEvent;
 
-/*
- * Result signals that a UI callback function may return
- *
- * UIRESULT_OKAY        Success, no action needed.
- * UIRESULT_ERROR       Unspecified error
- * UIRESULT_REFRESH     Trigger a screen refresh
- */
 typedef enum {
-    UIRESULT_OKAY,
-    UIRESULT_ERROR,
-    UIRESULT_REFRESH
+    UIRESULT_OKAY
 } UICbResult;
 
 /*
@@ -35,7 +28,7 @@ typedef enum {
  * event        The event that triggered the callback
  * data         A pointer to data associated with the event. May be NULL.
  */
-typedef UICbResult UICallback(UIEvent event, const void *const data);
+typedef UICbResult UICallback(UIEvent event, void *const data);
 
 #ifndef _NOEXTERN
 extern UICallback *activeInterface;

@@ -22,6 +22,9 @@
 
 #define KEY_CTRL(k) ((k) & 0x1F)
 
+/*************************
+ * Game struct functions *
+ *************************/
 void new_game(Game *game) {
     game->mode = NULL;
 
@@ -47,9 +50,13 @@ void end_game(Game *game) {
     free(game->ciphertext);
 }
 
+/************************
+ * UI Element Callbacks *
+ ************************/
 
-UICbResult new_game_ui(UIEvent event, const void *const data) {
-    const char *menu_options[] = {
+UICbResult new_game_ui(UIEvent event, void *const data) {
+    const size_t nCiphers = 3;
+    const char *cipher_menu_options[] = {
         "Caesar Cipher",
         "Shift Cipher",
         "Substitution Cipher"
@@ -57,12 +64,13 @@ UICbResult new_game_ui(UIEvent event, const void *const data) {
 
     static int selection = 0;
 
+    static WINDOW *cipher_menu_win;
 
     switch (event) {
         case UIEVENT_CREATE:
-            // Initialize state variables
-            selection = 0;
-            break;
+            goto create;
+        case UIEVENT_DESTROY:
+            goto destroy;
         case UIEVENT_DRAW:
             goto draw;
         case UIEVENT_KEYPRESS:
@@ -72,6 +80,14 @@ UICbResult new_game_ui(UIEvent event, const void *const data) {
 
     return UIRESULT_OKAY;
 
+create:
+    selection = 0;
+    cipher_menu_win = newwin(nCiphers+2, 24, (LINES - nCiphers+2) / 2, (COLS - 24) / 2);
+    return UIRESULT_OKAY;
+
+destroy:
+    delwin(cipher_menu_win);
+    return UIRESULT_OKAY;
 
 keypress: /* Handle keypress event */
     switch (*(int *)data) {
@@ -85,25 +101,33 @@ keypress: /* Handle keypress event */
 
     if (selection > 2) selection = 0; else if (selection < 0) selection = 2;
 
+    wrefresh(cipher_menu_win);  // Trigger immediate redraw of modified window
     return UIRESULT_OKAY;
 
 
 draw: /* Handle draw event */
     for (int i=0; i < 3; ++i) {
-        if (i == selection) standout();
+        if (i == selection) wstandout(cipher_menu_win);
 
-        mvprintw(i, 1, "%s", menu_options[i]);
+        //mvprintw(i, 1, "%s", cipher_menu_options[i]);
+        mvwprintw(cipher_menu_win, i+1, 1, "%s", cipher_menu_options[i]);
 
-        standend();
+        wstandend(cipher_menu_win);
     }
+    box(cipher_menu_win, 0, 0);
 
-    return UIRESULT_REFRESH;
+    wnoutrefresh(cipher_menu_win);
+
+    return UIRESULT_OKAY;
 }
 
 void play_game_ui() {
 }
 
 
+/********
+ * Main *
+ ********/
 int main() {
     Game game;
 
@@ -121,7 +145,13 @@ int main() {
     activeInterface = new_game_ui;
 
     /* Mainloop */
+    activeInterface(UIEVENT_CREATE, NULL);
+
     for (;;) {
+        /* Draw UI */
+        activeInterface(UIEVENT_DRAW, NULL);
+        doupdate();
+
         /* Handle Global Input */
         struct timespec start_input;
         timespec_get(&start_input, TIME_UTC);
@@ -143,29 +173,14 @@ int main() {
                     break;
             }
 
-            switch (activeInterface(UIEVENT_KEYPRESS, &ch)) {
-                case UIRESULT_ERROR:
-                    // Report err
-                    break;
-                case UIRESULT_REFRESH:
-                    refresh();
-                    break;
-            }
+            activeInterface(UIEVENT_KEYPRESS, &ch);
         } while (timesince(&start_input, TIME_UTC) < FRAMEPERIOD);
-
-        /* Draw UI */
-        switch (activeInterface(UIEVENT_DRAW, NULL)) {
-            case UIRESULT_ERROR:
-                // Report err
-                break;
-            case UIRESULT_REFRESH:
-                refresh();
-                break;
-        }
     }
 
 endprgm:
     // Clean up ncurses
+    activeInterface(UIEVENT_DESTROY, NULL);
+
     endwin();
 
     return 0;
