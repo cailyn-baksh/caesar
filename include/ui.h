@@ -8,7 +8,9 @@
  *
  * UIEVENT_CREATE       Create a new instance of the interface
  * UIEVENT_CLOSE        Close the interface
- * UIEVENT_DRAW         Draw a frame
+ * UIEVENT_DRAW         Draw a frame. Windows should be updated using
+ *                      wnoutrefresh(3X) as the mainloop will call doupdate(3X)
+ *                      after it has finished its own drawing.
  * UIEVENT_KEYPRESS     Handle a keypress
  */
 typedef enum {
@@ -30,11 +32,14 @@ typedef enum {
  */
 typedef UICbResult UICallback(UIEvent event, void *const data);
 
-#ifndef _NOEXTERN
+#ifndef _DEFEXTERN
+/*
+ * A pointer to the callback function for the currently active UI.
+ */
 extern UICallback *activeInterface;
 #else
 UICallback *activeInterface = NULL;
-#endif  // _NOEXTERN
+#endif  // _DEFEXTERN
 
 #endif  // _UI_H_
 

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include <ncurses.h>
@@ -13,11 +14,11 @@
 #include "messages.h"
 #include "util.h"
 
-#define _NOEXTERN
+#define _DEFEXTERN
 #include "ui.h"
-#undef _NOEXTERN
+#undef _DEFEXTERN
 
-#define FRAMERATE       5
+#define FRAMERATE       24
 #define FRAMEPERIOD     (1.0 / FRAMERATE)
 
 #define KEY_CTRL(k) ((k) & 0x1F)
@@ -26,22 +27,22 @@
  * Game struct functions *
  *************************/
 void new_game(Game *game) {
-    game->mode = NULL;
+    // Set all values to NULL
+    memset(game, 0, sizeof(Game));
 
-    game->key = NULL;
-
-    game->ciphertext = NULL;
+    // Initialize ciphertext and buffer_size with a cleartext message
     game->buffer_size = getmsg(&game->ciphertext);
 
+    // Get a hash of the cleartext message
     game->answer_hash = fnv1a32(game->ciphertext);
 
     // Config game timer
     game->paused = false;
 
+    // Set the game start time to the current time
     if (time(&game->start_time) == (time_t)-1) {
+        // If getting the current time failed, set extra_time to infinity
         game->extra_time = INFINITY;
-    } else {
-        game->extra_time = 0;
     }
 }
 
@@ -63,9 +64,9 @@ UICbResult new_game_ui(UIEvent event, void *const data) {
     };
 
     static int selection = 0;
-
     static WINDOW *cipher_menu_win;
 
+    // Jump to the correct event handler
     switch (event) {
         case UIEVENT_CREATE:
             goto create;
@@ -80,12 +81,12 @@ UICbResult new_game_ui(UIEvent event, void *const data) {
 
     return UIRESULT_OKAY;
 
-create:
+create: /* Handle UI creation event */
     selection = 0;
     cipher_menu_win = newwin(nCiphers+2, 24, (LINES - nCiphers+2) / 2, (COLS - 24) / 2);
     return UIRESULT_OKAY;
 
-destroy:
+destroy: /*  Handle UI destruction event*/
     delwin(cipher_menu_win);
     return UIRESULT_OKAY;
 
@@ -106,10 +107,10 @@ keypress: /* Handle keypress event */
 
 
 draw: /* Handle draw event */
+    // Draw cipher selection menu
     for (int i=0; i < 3; ++i) {
         if (i == selection) wstandout(cipher_menu_win);
 
-        //mvprintw(i, 1, "%s", cipher_menu_options[i]);
         mvwprintw(cipher_menu_win, i+1, 1, "%s", cipher_menu_options[i]);
 
         wstandend(cipher_menu_win);
@@ -138,13 +139,15 @@ int main() {
     initscr();
     cbreak();
     noecho();
-    timeout(FRAMEPERIOD);
+    timeout(FRAMEPERIOD * 1000);  // getch blocks for up to one full frame
     keypad(stdscr, TRUE);
     curs_set(0);
 
     activeInterface = new_game_ui;
 
     /* Mainloop */
+
+    // Init first ui
     activeInterface(UIEVENT_CREATE, NULL);
 
     for (;;) {
@@ -161,10 +164,8 @@ int main() {
         do {
             ch = getch();
 
+            // Handle global key events
             switch (ch) {
-                case ERR:
-                    // No input was recieved
-                    break;
                 case 27:
                     // Esc or alt
                     break;
@@ -173,7 +174,9 @@ int main() {
                     break;
             }
 
-            activeInterface(UIEVENT_KEYPRESS, &ch);
+            if (ch != ERR) {
+                activeInterface(UIEVENT_KEYPRESS, &ch);
+            }
         } while (timesince(&start_input, TIME_UTC) < FRAMEPERIOD);
     }
 
