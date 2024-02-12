@@ -23,6 +23,8 @@
 
 #define KEY_CTRL(k) ((k) & 0x1F)
 
+static Game game = {};
+
 /*************************
  * Game struct functions *
  *************************/
@@ -55,7 +57,16 @@ void end_game(Game *game) {
  * UI Element Callbacks *
  ************************/
 
-UICbResult new_game_ui(UIEvent event, void *const data) {
+UICbResult _new_game_ui(UIEvent event, void *const data) {
+    // TODO: communicate game settings back to main function
+    // TODO: launch new game with selected settings
+    // idea: make game struct a global variable (within translation unit) and
+    // include game settings within it. standardize the cipher functions so
+    // that they do not require the entire struct to be passed to them, &
+    // manage them from the main function.
+    // also, delegate more functionality to the mainloop & away from the ui
+    // callback functions (especially ui sequencing)
+
     const size_t nCiphers = 3;
     const char *cipher_menu_options[] = {
         "Caesar Cipher",
@@ -98,6 +109,8 @@ keypress: /* Handle keypress event */
         case KEY_DOWN:
             ++selection;
             break;
+        case KEY_ENTER:
+            break;
     }
 
     if (selection > 2) selection = 0; else if (selection < 0) selection = 2;
@@ -122,7 +135,12 @@ draw: /* Handle draw event */
     return UIRESULT_OKAY;
 }
 
-void play_game_ui() {
+UICbResult new_game_ui(UIEvent event, void *const data) {
+    return UIRESULT_OKAY;
+}
+
+UICbResult play_game_ui(UIEvent event, void *const data) {
+    return UIRESULT_OKAY;
 }
 
 
@@ -130,41 +148,47 @@ void play_game_ui() {
  * Main *
  ********/
 int main() {
-    Game game;
+    UICallback *activeUI = new_game_ui;
 
     // Seed RNG
-    srand(time(NULL));
+    srand(time(nullptr));
 
     // Init ncurses
     initscr();
     cbreak();
     noecho();
-    timeout(FRAMEPERIOD * 1000);  // getch blocks for up to one full frame
-    keypad(stdscr, TRUE);
     curs_set(0);
+    keypad(stdscr, TRUE);
 
-    activeInterface = new_game_ui;
+    // Set getch to block for up to one frame duration
+    timeout(FRAMEPERIOD * 1000);
 
     /* Mainloop */
 
-    // Init first ui
-    activeInterface(UIEVENT_CREATE, NULL);
+    // Init first UI
+    activeUI(UIEVENT_CREATE, NULL);
 
     for (;;) {
         /* Draw UI */
-        activeInterface(UIEVENT_DRAW, NULL);
+        // Active UI screen
+        switch (activeUI(UIEVENT_DRAW, NULL)) {}
+
+        // App-global UI elements
+
+        // Draw UI to terminal
+        wnoutrefresh(stdscr);
         doupdate();
 
-        /* Handle Global Input */
-        struct timespec start_input;
-        timespec_get(&start_input, TIME_UTC);
+        /* Handle input */
 
-        int ch;
+        // Recieve input until it's time for a redraw
+        struct timespec input_begin;
+        timespec_get(&input_begin, TIME_UTC);
 
         do {
-            ch = getch();
+            int ch = getch();
 
-            // Handle global key events
+            // Global key events
             switch (ch) {
                 case 27:
                     // Esc or alt
@@ -174,16 +198,14 @@ int main() {
                     break;
             }
 
+            // UI-specific key events
             if (ch != ERR) {
-                activeInterface(UIEVENT_KEYPRESS, &ch);
+                switch (activeUI(UIEVENT_KEYPRESS, &ch)) {}
             }
-        } while (timesince(&start_input, TIME_UTC) < FRAMEPERIOD);
+        } while (timesince(&input_begin, TIME_UTC) < FRAMEPERIOD);
     }
 
-endprgm:
     // Clean up ncurses
-    activeInterface(UIEVENT_DESTROY, NULL);
-
     endwin();
 
     return 0;

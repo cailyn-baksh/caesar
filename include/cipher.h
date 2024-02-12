@@ -12,16 +12,13 @@ typedef struct Game Game;
  * Pointer to a function that implements a cipher. The function modifies the
  * text in place.
  *
- * text     A pointer to a buffer containing cleartext to be enciphered. Tihs
- *          buffer is edited in place.
- * key      A the cipher key.
- *
  * textbuf  A pointer to the text buffer containing cleartext to be enciphered.
  *          The data is enciphered in-place, mutating the buffer contents.
  * keybuf   A pointer to the buffer containing the cipher key. If the buffer is
  *          NULL, then a key is generated.
+ * Returns the size of the key buffer.
  */
-typedef void cipherfn(char *const textbuf, void **keybuf);
+typedef size_t cipherfn(char *const textbuf, void **keybuf);
 
 /*
  * Encodes a string in place using a caesar cipher with the given key. This is
@@ -60,7 +57,7 @@ void subst_cipher(char *text);
  *              pausing.
  */
 struct Game {
-    void *mode;
+    cipherfn *cipher;
 
     uint8_t *key;
     size_t key_size;
