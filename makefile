@@ -1,5 +1,5 @@
 NAME = caesar
-VERSION = v0.1.0
+VERSION = v0.2.0
 SRCS = $(wildcard src/*.c)
 INCLUDES = include/
 LIBS = ncurses
