@@ -1,0 +1,33 @@
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+[2024-02-12T16:15:51] src/log.c: Initialized logger.
+[2024-02-12T16:15:51] src/main.c: Initializing ncurses
+[2024-02-12T16:15:51] src/main.c: Create widget 0001h
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_CREATE
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved event 3
+[2024-02-12T16:15:51] src/main.c: Begin mainloop
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:51] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DRAW
+[2024-02-12T16:15:52] src/main.c: Recieved key 71 ('q')
+[2024-02-12T16:15:52] src/main.c: Destroy widget 0001h
+[2024-02-12T16:15:52] src/ui.c: Widget 0001h recieved EVENT_DESTROY
+[2024-02-12T16:15:52] src/main.c: Exit curses mode
+[2024-02-12T16:15:52] src/log.c: Closing log file

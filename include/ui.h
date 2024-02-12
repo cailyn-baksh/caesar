@@ -30,6 +30,12 @@
  * - Mainloop draws each 
  */
 
+#if __INCLUDE_LEVEL__ == 0
+// Header file is being compiled on its own (i.e. statically analyzed). Ensure
+// that extern definitions are being analyzed instead of the declarations.
+#define _DEFINE_EXTERN
+#endif
+
 /*
  * UI events
  *
@@ -74,6 +80,7 @@ typedef enum {
  * events dispatched to a Widget.
  *
  * self                 A pointer to the widget the event was triggered on.
+ *                      This pointer may have a more specific type than void.
  * event                The event that was triggered
  * data                 Data associated with the event. This may be null.
  */
@@ -81,6 +88,8 @@ typedef void EventHandler(void *const self, Event event, const void *const data)
 
 /*
  * A wrapper around an ncurses WINDOW.
+ *
+ * id                   An identifier number for this widget.
  *
  * win                  The underlying WINDOW
  *
@@ -92,6 +101,8 @@ typedef void EventHandler(void *const self, Event event, const void *const data)
  * data                 Stores widget-specific data.
  */
 typedef struct Widget {
+    unsigned short id;
+
     WINDOW *win;
 
     bool visible;
@@ -100,6 +111,42 @@ typedef struct Widget {
     EventHandler *handler;
     void *data;
 } Widget;
+
+
+/*************************************
+ * Widget Declarations & Definitions *
+ *************************************/
+
+#define WIDGET_COUNT 1
+
+// Widget IDs
+#define WIDGET_ANON                 0x0000
+#define WIDGET_CIPHER_SELECT        0x0001
+
+// Widget handler functions
+void cipherSelectHandler(Widget *const self, Event event, const void *const data);
+
+// Widget registry
+#ifdef _DEFINE_EXTERN
+
+// Temporarily suppress incompatible pointer type warning, since event handlers
+// can use specific pointer types for the self pointer
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
+
+Widget widgets[WIDGET_COUNT] = {
+    {
+        .id = WIDGET_CIPHER_SELECT,
+        .visible = true,
+        .handler = cipherSelectHandler
+    }
+};
+
+#pragma GCC diagnostic pop
+
+#else
+extern Widget widgets[WIDGET_COUNT];
+#endif  // _DEFINE_EXTERN
 
 #endif  // _UI_H_
 

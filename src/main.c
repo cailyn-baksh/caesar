@@ -14,9 +14,9 @@
 #include "messages.h"
 #include "util.h"
 
-#define _DEFEXTERN
+#define _DEFINE_EXTERN
 #include "ui.h"
-#undef _DEFEXTERN
+#undef _DEFINE_EXTERN
 
 #define FRAMERATE       24
 #define FRAMEPERIOD     (1.0 / FRAMERATE)
@@ -56,7 +56,7 @@ void end_game(Game *game) {
 /************************
  * UI Element Callbacks *
  ************************/
-
+/*
 UICbResult _new_game_ui(UIEvent event, void *const data) {
     // TODO: communicate game settings back to main function
     // TODO: launch new game with selected settings
@@ -92,16 +92,16 @@ UICbResult _new_game_ui(UIEvent event, void *const data) {
 
     return UIRESULT_OKAY;
 
-create: /* Handle UI creation event */
+create: /* Handle UI creation event * /
     selection = 0;
     cipher_menu_win = newwin(nCiphers+2, 24, (LINES - nCiphers+2) / 2, (COLS - 24) / 2);
     return UIRESULT_OKAY;
 
-destroy: /*  Handle UI destruction event*/
+destroy: /*  Handle UI destruction event* /
     delwin(cipher_menu_win);
     return UIRESULT_OKAY;
 
-keypress: /* Handle keypress event */
+keypress: /* Handle keypress event * /
     switch (*(int *)data) {
         case KEY_UP:
             --selection;
@@ -119,7 +119,7 @@ keypress: /* Handle keypress event */
     return UIRESULT_OKAY;
 
 
-draw: /* Handle draw event */
+draw: /* Handle draw event * /
     // Draw cipher selection menu
     for (int i=0; i < 3; ++i) {
         if (i == selection) wstandout(cipher_menu_win);
@@ -142,18 +142,21 @@ UICbResult new_game_ui(UIEvent event, void *const data) {
 UICbResult play_game_ui(UIEvent event, void *const data) {
     return UIRESULT_OKAY;
 }
-
+*/
 
 /********
  * Main *
  ********/
 int main() {
-    UICallback *activeUI = new_game_ui;
+    // Init logging
+    init_log("caesar.log");
 
     // Seed RNG
     srand(time(nullptr));
 
-    // Init ncurses
+    /* Init ncurses */
+    print_log("Initializing ncurses");
+
     initscr();
     cbreak();
     noecho();
@@ -163,21 +166,38 @@ int main() {
     // Set getch to block for up to one frame duration
     timeout(FRAMEPERIOD * 1000);
 
+    // Create widgets
+    for (size_t i=0; i < WIDGET_COUNT; ++i) {
+        print_log("Create widget %04hXh", widgets[i].id);
+        widgets[i].handler(&widgets[i], EVENT_CREATE, nullptr);
+    }
+
+    size_t focus_index = 0;
+
+    // Send focus event to the initially focused widget
+    widgets[focus_index]
+        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
+
     /* Mainloop */
-
-    // Init first UI
-    activeUI(UIEVENT_CREATE, NULL);
-
+    print_log("Begin mainloop");
     for (;;) {
         /* Draw UI */
-        // Active UI screen
-        switch (activeUI(UIEVENT_DRAW, NULL)) {}
 
         // App-global UI elements
+        mvprintw(0, 0, "k");
 
         // Draw UI to terminal
         wnoutrefresh(stdscr);
+
+        // Draw visible widgets
+        for (size_t i=0; i < WIDGET_COUNT; ++i) {
+            if (widgets[i].visible == true) {
+                widgets[i].handler(&widgets[i], EVENT_DRAW, nullptr);
+            }
+        }
+
         doupdate();
+        //refresh();
 
         /* Handle input */
 
@@ -188,25 +208,66 @@ int main() {
         do {
             int ch = getch();
 
+            if (ch != ERR) print_log("Recieved key %02X ('%c')", ch, ch);
+
             // Global key events
             switch (ch) {
                 case 27:
                     // Esc or alt
                     break;
+                case '\t':  // Tab forward
+                    // Blur current focus
+                    widgets[focus_index]
+                        .handler(&widgets[focus_index], EVENT_BLUR, nullptr);
+
+                    // Advance to next widget
+                    ++focus_index;
+                    if (focus_index >= WIDGET_COUNT) focus_index = 0;
+
+                    // Focus new widget
+                    widgets[focus_index]
+                        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
+                    break;
+                case KEY_BTAB:  // Tab back
+                    // Blur current focus
+                    widgets[focus_index]
+                        .handler(&widgets[focus_index], EVENT_BLUR, nullptr);
+
+                    // Retreat to prev widget
+                    --focus_index;
+                    if (focus_index < 0) focus_index = WIDGET_COUNT-1;
+
+                    // Focus new widget
+                    widgets[focus_index]
+                        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
+                    break;
                 case KEY_CTRL('N'):
                     // New Game
                     break;
+                case 'q':  // TODO: change to a better key
+                    goto cleanup;
             }
 
             // UI-specific key events
             if (ch != ERR) {
-                switch (activeUI(UIEVENT_KEYPRESS, &ch)) {}
+                widgets[focus_index]
+                    .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
             }
         } while (timesince(&input_begin, TIME_UTC) < FRAMEPERIOD);
     }
 
-    // Clean up ncurses
+cleanup: /* Clean up */
+    // Ncurses cleanup
+    for (size_t i=0; i < WIDGET_COUNT; ++i) {
+        print_log("Destroy widget %04hXh", widgets[i].id);
+        widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
+    }
+
+    print_log("Exit curses mode");
     endwin();
+
+    // Logging cleanup
+    close_log();
 
     return 0;
 }

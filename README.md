@@ -14,10 +14,13 @@ A code-breaking game.
 - Ncurses
 - Libconfig
 
-## v1.0.0 Features/Todo list &mdash; 3.7% (1/26)
+## v1.0.0 Features/Todo list &mdash; 5.6% (2/36)
 
 - [ ] Curses UI
   - [ ] UI framework
+    - [ ] Widgets
+    - [ ] Menu
+    - [ ] Tab between widgets
   - [ ] Mainloop
   - [ ] New game menu
   - [ ] Show decrypted text overlaid/side-by-side as progress is made
@@ -35,6 +38,12 @@ A code-breaking game.
   - [ ] Hex viewer
   - [ ] Frequency analyzer
 - [ ] User config
+  - [ ] Command line arguments
+  - [ ] Config file
+  - [ ] Edit config UI
+- [ ] Debug logging
+  - [x] Basic logging to file
+  - [ ] Log levels & filters
 - [ ] Documentation
   - [ ] Developer documentation
     - [ ] Header docs (high-level overview)
