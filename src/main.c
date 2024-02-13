@@ -23,7 +23,7 @@
 
 #define KEY_CTRL(k) ((k) & 0x1F)
 
-static Game game = {};
+static Game game;
 
 /*************************
  * Game struct functions *

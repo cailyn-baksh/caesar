@@ -6,6 +6,10 @@
 
 #include "cipher.h"
 
+#define _Q(s) #s
+
+#define Q(s) _Q(s)
+
 void _init_log(FILE *f);
 
 /*
@@ -29,7 +33,7 @@ void _print_log(const char *fmt, ...);
  * log message originated from and the time the message occurred at. This
  * function has the same arguments as printf(3).
  */
-#define print_log(fmt, ...) _print_log(__BASE_FILE__ ": " fmt __VA_OPT__(,) __VA_ARGS__)
+#define print_log(fmt, ...) _print_log("%s:%s():%zu: " fmt, __BASE_FILE__, __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 
 void log_game_state(FILE *file, Game *game);
 

@@ -45,7 +45,7 @@ void _print_log(const char *fmt, ...) {
 
     FILE *f = (logfile != nullptr) ? logfile : stderr;
 
-    // Print datetime
+    // Get datetime
     const time_t cur_time = time(nullptr);
     char time_str[23] = { '\0' };
 

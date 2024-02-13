@@ -4,6 +4,10 @@ SRCS = $(wildcard src/*.c)
 INCLUDES = include/
 LIBS = ncurses
 
+CLEAN_PATTERNS = ./bin/* ./*.log
+
+find_args = $(let first rest,$1,-path '$(first)' $(if $(rest),-o $(call find_args,$(rest))))
+
 OPTIM = -O3 -flto
 DEFS = 'VERSION="$(VERSION)"'
 WARNINGS = all extra no-char-subscripts no-switch
@@ -25,7 +29,7 @@ bin:
 	mkdir -p bin
 
 clean:
-	find bin/* -type f -delete
+	find . \( $(call find_args,$(CLEAN_PATTERNS)) \) -type f -delete -printf "Delete %p\n"
 
 .PHONY: build clean FORCE bin
 FORCE:
