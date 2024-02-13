@@ -14,9 +14,9 @@
 #include "messages.h"
 #include "util.h"
 
-#define _DEFEXTERN
+#define _DEFINE_EXTERN
 #include "ui.h"
-#undef _DEFEXTERN
+#undef _DEFINE_EXTERN
 
 #define FRAMERATE       24
 #define FRAMEPERIOD     (1.0 / FRAMERATE)
@@ -56,104 +56,53 @@ void end_game(Game *game) {
 /************************
  * UI Element Callbacks *
  ************************/
-
-UICbResult _new_game_ui(UIEvent event, void *const data) {
-    // TODO: communicate game settings back to main function
-    // TODO: launch new game with selected settings
-    // idea: make game struct a global variable (within translation unit) and
-    // include game settings within it. standardize the cipher functions so
-    // that they do not require the entire struct to be passed to them, &
-    // manage them from the main function.
-    // also, delegate more functionality to the mainloop & away from the ui
-    // callback functions (especially ui sequencing)
-
-    const size_t nCiphers = 3;
-    const char *cipher_menu_options[] = {
-        "Caesar Cipher",
-        "Shift Cipher",
-        "Substitution Cipher"
-    };
-
-    static int selection = 0;
-    static WINDOW *cipher_menu_win;
-
-    // Jump to the correct event handler
+void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
+    // Is goto a good idea here?
     switch (event) {
-        case UIEVENT_CREATE:
+        case EVENT_CREATE:
+            print_log("Widget %04hXh recieved EVENT_CREATE", self->id);
             goto create;
-        case UIEVENT_DESTROY:
+        case EVENT_DESTROY:
+            print_log("Widget %04hXh recieved EVENT_DESTROY", self->id);
             goto destroy;
-        case UIEVENT_DRAW:
+        case EVENT_DRAW:
+            print_log("Widget %04hXh recieved EVENT_DRAW", self->id);
             goto draw;
-        case UIEVENT_KEYPRESS:
-            goto keypress;
         default:
+            print_log("Widget %04hXh recieved event %X", self->id, event);
     }
 
-    return UIRESULT_OKAY;
+    return;
 
-create: /* Handle UI creation event */
-    selection = 0;
-    cipher_menu_win = newwin(nCiphers+2, 24, (LINES - nCiphers+2) / 2, (COLS - 24) / 2);
-    return UIRESULT_OKAY;
+create:
+    self->win = newwin(3, 5, 2, 0);
+    return;
 
-destroy: /*  Handle UI destruction event*/
-    delwin(cipher_menu_win);
-    return UIRESULT_OKAY;
+destroy:
+    delwin(self->win);
+    return;
 
-keypress: /* Handle keypress event */
-    switch (*(int *)data) {
-        case KEY_UP:
-            --selection;
-            break;
-        case KEY_DOWN:
-            ++selection;
-            break;
-        case KEY_ENTER:
-            break;
-    }
+draw:
+    mvwprintw(self->win, 2, 0, "h");
 
-    if (selection > 2) selection = 0; else if (selection < 0) selection = 2;
-
-    wrefresh(cipher_menu_win);  // Trigger immediate redraw of modified window
-    return UIRESULT_OKAY;
-
-
-draw: /* Handle draw event */
-    // Draw cipher selection menu
-    for (int i=0; i < 3; ++i) {
-        if (i == selection) wstandout(cipher_menu_win);
-
-        mvwprintw(cipher_menu_win, i+1, 1, "%s", cipher_menu_options[i]);
-
-        wstandend(cipher_menu_win);
-    }
-    box(cipher_menu_win, 0, 0);
-
-    wnoutrefresh(cipher_menu_win);
-
-    return UIRESULT_OKAY;
+    //wrefresh(self->win);
+    wnoutrefresh(self->win);
+    return;
 }
-
-UICbResult new_game_ui(UIEvent event, void *const data) {
-    return UIRESULT_OKAY;
-}
-
-UICbResult play_game_ui(UIEvent event, void *const data) {
-    return UIRESULT_OKAY;
-}
-
 
 /********
  * Main *
  ********/
 int main() {
-    UICallback *activeUI = new_game_ui;
+    // Init logging
+    init_log("caesar.log");
 
     // Seed RNG
     srand(time(nullptr));
 
-    // Init ncurses
+    /* Init ncurses */
+    print_log("Initializing ncurses");
+
     initscr();
     cbreak();
     noecho();
@@ -163,20 +112,36 @@ int main() {
     // Set getch to block for up to one frame duration
     timeout(FRAMEPERIOD * 1000);
 
+    // Create widgets
+    for (size_t i=0; i < WIDGET_COUNT; ++i) {
+        print_log("Create widget %04hXh", widgets[i].id);
+        widgets[i].handler(&widgets[i], EVENT_CREATE, nullptr);
+    }
+
+    size_t focus_index = 0;
+
+    // Send focus event to the initially focused widget
+    widgets[focus_index]
+        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
+
     /* Mainloop */
-
-    // Init first UI
-    activeUI(UIEVENT_CREATE, NULL);
-
+    print_log("Begin mainloop");
     for (;;) {
         /* Draw UI */
-        // Active UI screen
-        switch (activeUI(UIEVENT_DRAW, NULL)) {}
 
-        // App-global UI elements
+        // Draw toplevel UI elements
+        mvprintw(0, 0, "k");
+
+        wnoutrefresh(stdscr);
+
+        // Draw visible widgets
+        for (size_t i=0; i < WIDGET_COUNT; ++i) {
+            if (widgets[i].visible == true) {
+                widgets[i].handler(&widgets[i], EVENT_DRAW, nullptr);
+            }
+        }
 
         // Draw UI to terminal
-        wnoutrefresh(stdscr);
         doupdate();
 
         /* Handle input */
@@ -188,25 +153,47 @@ int main() {
         do {
             int ch = getch();
 
+            if (ch != ERR) print_log("Recieved key %d ('%c')", ch, ch);
+
             // Global key events
             switch (ch) {
                 case 27:
                     // Esc or alt
                     break;
+
+                case '\t':  // Tab forward
+                case KEY_BTAB:  // Tab back
+                    tab_focus(ch != '\t');
+                    break;
+
                 case KEY_CTRL('N'):
                     // New Game
                     break;
+
+                case 'q':  // TODO: change to a better key
+                    goto cleanup;
             }
 
             // UI-specific key events
             if (ch != ERR) {
-                switch (activeUI(UIEVENT_KEYPRESS, &ch)) {}
+                widgets[focus_index]
+                    .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
             }
         } while (timesince(&input_begin, TIME_UTC) < FRAMEPERIOD);
     }
 
-    // Clean up ncurses
+cleanup: /* Clean up */
+    // Ncurses cleanup
+    for (size_t i=0; i < WIDGET_COUNT; ++i) {
+        print_log("Destroy widget %04hXh", widgets[i].id);
+        widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
+    }
+
+    print_log("Exit curses mode");
     endwin();
+
+    // Logging cleanup
+    close_log();
 
     return 0;
 }

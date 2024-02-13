@@ -14,24 +14,45 @@ A code-breaking game.
 - Ncurses
 - Libconfig
 
-## v1.0.0 Features/Todo list
+## v1.0.0 Features/Todo list &mdash; 5.6% (2/36)
 
-- Curses UI
+- [ ] Curses UI
+  - [ ] UI framework
+    - [ ] Widgets
+    - [ ] Menu
+    - [ ] Tab between widgets
+  - [ ] Mainloop
   - [ ] New game menu
   - [ ] Show decrypted text overlaid/side-by-side as progress is made
-- Ciphers
+- [ ] Ciphers
   - [x] Caesar cipher
   - [ ] ASCII shift cipher
   - [ ] Substitution cipher
   - [ ] XOR cipher
-- Messages
+- [ ] Messages
   - [ ] Public Domain literature source texts
   - [ ] User-supplied text from file
   - [ ] Selectable length & challenge rating for messages
-- Helper tools
+- [ ] Helper tools
   - [ ] ASCII table
   - [ ] Hex viewer
   - [ ] Frequency analyzer
+- [ ] User config
+  - [ ] Command line arguments
+  - [ ] Config file
+  - [ ] Edit config UI
+- [ ] Debug logging
+  - [x] Basic logging to file
+  - [ ] Log levels & filters
+- [ ] Documentation
+  - [ ] Developer documentation
+    - [ ] Header docs (high-level overview)
+    - [ ] Source code docs (detailed)
+  - [ ] User docs
+    - [ ] README.md
+    - [ ] Program usage/navigation/keybind help
+    - [ ] How to play
+
 
 ## Future Features
 

@@ -1,10 +1,65 @@
 #include <inttypes.h>
+#include <stdarg.h>
 #include <string.h>
 #include <time.h>
 
 #include "log.h"
 
 #define INDENT "  "
+
+FILE *logfile = nullptr;
+
+void _init_log(FILE *f) {
+    if (logfile != nullptr) close_log();
+    if (f != nullptr) {
+        logfile = f;
+
+        // Indicate start of new segment in log file
+        for (int i=0; i < 40; ++i) {
+            fputc('=', logfile);
+            fputc('-', logfile);
+        }
+        fputc('\n', logfile);
+
+        print_log("Initialized logger.");
+    } else {
+        logfile = stderr;
+
+        print_log("Target log file stream was null; falling back to stderr.");
+    }
+}
+
+void close_log() {
+    print_log("Closing log file");
+
+    if (logfile != nullptr && logfile != stderr && logfile != stdout) {
+        fclose(logfile);
+    }
+
+    logfile = nullptr;
+}
+
+void _print_log(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    FILE *f = (logfile != nullptr) ? logfile : stderr;
+
+    // Print datetime
+    const time_t cur_time = time(nullptr);
+    char time_str[23] = { '\0' };
+
+    // [YYYY-MM-DDTHH:mm:ss]
+    strftime(time_str, 32, "[%FT%T]", localtime(&cur_time));
+    fprintf(f, "%s ", time_str);
+
+    // Print log message
+    vfprintf(f, fmt, args);
+
+    fprintf(f, "\n");
+
+    va_end(args);
+}
 
 void log_game_state(FILE *file, Game *game) {
     if (game == NULL) {
@@ -27,7 +82,6 @@ void log_game_state(FILE *file, Game *game) {
 
     fprintf(file,
             "Game @ %p\n"
-            INDENT ".mode = %p\n"
             INDENT ".key = [%p] %s\n"
             INDENT ".ciphertext = [%p] \"%s\"\n"
             INDENT ".buffer_size = %zu\n"
@@ -35,8 +89,8 @@ void log_game_state(FILE *file, Game *game) {
             INDENT ".paused = %s\n"
             INDENT ".start_time = %s\n"
             INDENT ".extra_time = %.2F\n",
-            game, game->mode, game->key, key_preview, game->ciphertext,
-            cipher_preview, game->buffer_size, game->answer_hash,
+            game, game->key, key_preview, game->ciphertext, cipher_preview,
+            game->buffer_size, game->answer_hash,
             game->paused ? "true" : "false", time_str, game->extra_time);
 }
 
