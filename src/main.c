@@ -56,93 +56,39 @@ void end_game(Game *game) {
 /************************
  * UI Element Callbacks *
  ************************/
-/*
-UICbResult _new_game_ui(UIEvent event, void *const data) {
-    // TODO: communicate game settings back to main function
-    // TODO: launch new game with selected settings
-    // idea: make game struct a global variable (within translation unit) and
-    // include game settings within it. standardize the cipher functions so
-    // that they do not require the entire struct to be passed to them, &
-    // manage them from the main function.
-    // also, delegate more functionality to the mainloop & away from the ui
-    // callback functions (especially ui sequencing)
-
-    const size_t nCiphers = 3;
-    const char *cipher_menu_options[] = {
-        "Caesar Cipher",
-        "Shift Cipher",
-        "Substitution Cipher"
-    };
-
-    static int selection = 0;
-    static WINDOW *cipher_menu_win;
-
-    // Jump to the correct event handler
+void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
+    // Is goto a good idea here?
     switch (event) {
-        case UIEVENT_CREATE:
+        case EVENT_CREATE:
+            print_log("Widget %04hXh recieved EVENT_CREATE", self->id);
             goto create;
-        case UIEVENT_DESTROY:
+        case EVENT_DESTROY:
+            print_log("Widget %04hXh recieved EVENT_DESTROY", self->id);
             goto destroy;
-        case UIEVENT_DRAW:
+        case EVENT_DRAW:
+            print_log("Widget %04hXh recieved EVENT_DRAW", self->id);
             goto draw;
-        case UIEVENT_KEYPRESS:
-            goto keypress;
         default:
+            print_log("Widget %04hXh recieved event %X", self->id, event);
     }
 
-    return UIRESULT_OKAY;
+    return;
 
-create: /* Handle UI creation event * /
-    selection = 0;
-    cipher_menu_win = newwin(nCiphers+2, 24, (LINES - nCiphers+2) / 2, (COLS - 24) / 2);
-    return UIRESULT_OKAY;
+create:
+    self->win = newwin(3, 5, 2, 0);
+    return;
 
-destroy: /*  Handle UI destruction event* /
-    delwin(cipher_menu_win);
-    return UIRESULT_OKAY;
+destroy:
+    delwin(self->win);
+    return;
 
-keypress: /* Handle keypress event * /
-    switch (*(int *)data) {
-        case KEY_UP:
-            --selection;
-            break;
-        case KEY_DOWN:
-            ++selection;
-            break;
-        case KEY_ENTER:
-            break;
-    }
+draw:
+    mvwprintw(self->win, 2, 0, "h");
 
-    if (selection > 2) selection = 0; else if (selection < 0) selection = 2;
-
-    wrefresh(cipher_menu_win);  // Trigger immediate redraw of modified window
-    return UIRESULT_OKAY;
-
-
-draw: /* Handle draw event * /
-    // Draw cipher selection menu
-    for (int i=0; i < 3; ++i) {
-        if (i == selection) wstandout(cipher_menu_win);
-
-        mvwprintw(cipher_menu_win, i+1, 1, "%s", cipher_menu_options[i]);
-
-        wstandend(cipher_menu_win);
-    }
-    box(cipher_menu_win, 0, 0);
-
-    wnoutrefresh(cipher_menu_win);
-
-    return UIRESULT_OKAY;
+    //wrefresh(self->win);
+    wnoutrefresh(self->win);
+    return;
 }
-
-UICbResult new_game_ui(UIEvent event, void *const data) {
-    return UIRESULT_OKAY;
-}
-
-UICbResult play_game_ui(UIEvent event, void *const data) {
-    return UIRESULT_OKAY;
-}
-*/
 
 /********
  * Main *
@@ -183,10 +129,9 @@ int main() {
     for (;;) {
         /* Draw UI */
 
-        // App-global UI elements
+        // Draw toplevel UI elements
         mvprintw(0, 0, "k");
 
-        // Draw UI to terminal
         wnoutrefresh(stdscr);
 
         // Draw visible widgets
@@ -196,8 +141,8 @@ int main() {
             }
         }
 
+        // Draw UI to terminal
         doupdate();
-        //refresh();
 
         /* Handle input */
 
@@ -208,42 +153,23 @@ int main() {
         do {
             int ch = getch();
 
-            if (ch != ERR) print_log("Recieved key %02X ('%c')", ch, ch);
+            if (ch != ERR) print_log("Recieved key %d ('%c')", ch, ch);
 
             // Global key events
             switch (ch) {
                 case 27:
                     // Esc or alt
                     break;
+
                 case '\t':  // Tab forward
-                    // Blur current focus
-                    widgets[focus_index]
-                        .handler(&widgets[focus_index], EVENT_BLUR, nullptr);
-
-                    // Advance to next widget
-                    ++focus_index;
-                    if (focus_index >= WIDGET_COUNT) focus_index = 0;
-
-                    // Focus new widget
-                    widgets[focus_index]
-                        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
-                    break;
                 case KEY_BTAB:  // Tab back
-                    // Blur current focus
-                    widgets[focus_index]
-                        .handler(&widgets[focus_index], EVENT_BLUR, nullptr);
-
-                    // Retreat to prev widget
-                    --focus_index;
-                    if (focus_index < 0) focus_index = WIDGET_COUNT-1;
-
-                    // Focus new widget
-                    widgets[focus_index]
-                        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
+                    tab_focus(ch != '\t');
                     break;
+
                 case KEY_CTRL('N'):
                     // New Game
                     break;
+
                 case 'q':  // TODO: change to a better key
                     goto cleanup;
             }

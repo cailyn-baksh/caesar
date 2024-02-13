@@ -1,36 +1,32 @@
 #include "log.h"
 #include "ui.h"
 
-void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
-    // Is goto a good idea here?
-    switch (event) {
-        case EVENT_CREATE:
-            print_log("Widget %04hXh recieved EVENT_CREATE", self->id);
-            goto create;
-        case EVENT_DESTROY:
-            print_log("Widget %04hXh recieved EVENT_DESTROY", self->id);
-            goto destroy;
-        case EVENT_DRAW:
-            print_log("Widget %04hXh recieved EVENT_DRAW", self->id);
-            goto draw;
-        default:
-            print_log("Widget %04hXh recieved event %X", self->id, event);
+void tab_focus(bool shift) {
+    // Send blur event to currently focused widget
+    focused_widget->handler(focused_widget, EVENT_BLUR, nullptr);
+
+    // Change focused widget
+    if (shift) {
+        // Shift-Tab: move backwards
+        if (focused_widget == &widgets[0]) {
+            // First widget is focused. Loop around to last widget
+            focused_widget = &widgets[WIDGET_COUNT-1];
+        } else {
+            // Focus previous widget
+            focused_widget -= sizeof(Widget);
+        }
+    } else {
+        // Tab: move forwards
+        if (focused_widget == &widgets[WIDGET_COUNT-1]) {
+            // Last widget is focused. Loop around to first widget
+            focused_widget = &widgets[0];
+        } else {
+            // Focus next widget
+            focused_widget += sizeof(Widget);
+        }
     }
 
-    return;
-
-create:
-    self->win = newwin(1, 1, 0, 0);
-    return;
-
-destroy:
-    delwin(self->win);
-    return;
-
-draw:
-    mvwprintw(self->win, 2, 0, "h");
-
-    wrefresh(self->win);
-    //wnoutrefresh(self->win);
-    return;
+    // Send focus event to newly focused widget
+    focused_widget->handler(focused_widget, EVENT_FOCUS, nullptr);
 }
+

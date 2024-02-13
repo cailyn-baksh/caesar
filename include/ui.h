@@ -112,6 +112,10 @@ typedef struct Widget {
     void *data;
 } Widget;
 
+/*
+ * Handle a Tab or Shift-Tab action by shifting the focus.
+ */
+void tab_focus(bool shift);
 
 /*************************************
  * Widget Declarations & Definitions *
@@ -144,8 +148,11 @@ Widget widgets[WIDGET_COUNT] = {
 
 #pragma GCC diagnostic pop
 
+Widget *focused_widget = &widgets[0];
+
 #else
 extern Widget widgets[WIDGET_COUNT];
+extern Widget *focused_widget;
 #endif  // _DEFINE_EXTERN
 
 #endif  // _UI_H_
