@@ -114,6 +114,8 @@ typedef struct Widget {
 
 /*
  * Handle a Tab or Shift-Tab action by shifting the focus.
+ *
+ * shift                A boolean indicating which direction to tab in.
  */
 void tab_focus(bool shift);
 
@@ -138,6 +140,9 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types"
 
+/*
+ * Array of all the widgets
+ */
 Widget widgets[WIDGET_COUNT] = {
     {
         .id = WIDGET_CIPHER_SELECT,
@@ -148,6 +153,9 @@ Widget widgets[WIDGET_COUNT] = {
 
 #pragma GCC diagnostic pop
 
+/*
+ * Pointer to the widget which currently has user focus
+ */
 Widget *focused_widget = &widgets[0];
 
 #else

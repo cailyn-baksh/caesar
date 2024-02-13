@@ -14,14 +14,14 @@ A code-breaking game.
 - Ncurses
 - Libconfig
 
-## v1.0.0 Features/Todo list &mdash; 5.6% (2/36)
+## v1.0.0 Features/Todo list &mdash; 13.9% (5/36)
 
 - [ ] Curses UI
   - [ ] UI framework
-    - [ ] Widgets
+    - [x] Widgets
     - [ ] Menu
-    - [ ] Tab between widgets
-  - [ ] Mainloop
+    - [x] Tab between widgets
+  - [x] Mainloop
   - [ ] New game menu
   - [ ] Show decrypted text overlaid/side-by-side as progress is made
 - [ ] Ciphers

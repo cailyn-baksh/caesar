@@ -76,6 +76,7 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
 
 create:
     self->win = newwin(3, 5, 2, 0);
+    self->enabled = true;
     return;
 
 destroy:
@@ -85,7 +86,6 @@ destroy:
 draw:
     mvwprintw(self->win, 2, 0, "h");
 
-    //wrefresh(self->win);
     wnoutrefresh(self->win);
     return;
 }
