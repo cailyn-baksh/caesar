@@ -14,7 +14,7 @@ A code-breaking game.
 - Ncurses
 - Libconfig
 
-## v1.0.0 Features/Todo list &mdash; 13.9% (5/36)
+## v1.0.0 Features/Todo list &mdash; 16.7% (6/36)
 
 - [ ] Curses UI
   - [ ] UI framework
@@ -22,7 +22,7 @@ A code-breaking game.
     - [ ] Menu
     - [x] Tab between widgets
   - [x] Mainloop
-  - [ ] New game menu
+  - [x] New game menu
   - [ ] Show decrypted text overlaid/side-by-side as progress is made
 - [ ] Ciphers
   - [x] Caesar cipher

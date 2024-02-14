@@ -57,6 +57,7 @@ void _print_log(const char *fmt, ...) {
     vfprintf(f, fmt, args);
 
     fprintf(f, "\n");
+    fflush(f);
 
     va_end(args);
 }

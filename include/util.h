@@ -5,6 +5,15 @@
 #include <time.h>
 
 /*
+ * Cleaner-looking way to cast a pointer to another type and dereference it.
+ *
+ * type     The type to dereference the pointer as
+ * ptr      The pointer to dereference
+ * Produces an lvalue expression of the specified type
+ */
+#define deref_as(type, ptr) (*((type *)ptr))
+
+/*
  * Computes a 32-bit Fowler-Noll-Vo hash for a string message, using the FNV-1a
  * algorithm.
  *

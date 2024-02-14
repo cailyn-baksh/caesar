@@ -112,6 +112,10 @@ typedef struct Widget {
     void *data;
 } Widget;
 
+/************************
+ * General UI Functions *
+ ************************/
+
 /*
  * Handle a Tab or Shift-Tab action by shifting the focus.
  *
@@ -119,21 +123,27 @@ typedef struct Widget {
  */
 void tab_focus(bool shift);
 
+void titled_box(WINDOW *win, const char *title);
+
 /*************************************
  * Widget Declarations & Definitions *
  *************************************/
 
-#define WIDGET_COUNT 1
+#define WIDGET_COUNT 2
 
 // Widget IDs
 #define WIDGET_ANON                 0x0000
 #define WIDGET_CIPHER_SELECT        0x0001
+#define WIDGET_START_GAME_BTN         0x0002
 
 // Widget handler functions
 void cipherSelectHandler(Widget *const self, Event event, const void *const data);
+void startGameBtnHandler(Widget *const self, Event event, const void *const data);
 
 // Widget registry
 #ifdef _DEFINE_EXTERN
+
+#define _UI_H_EXTERNS_DEFINED
 
 // Temporarily suppress incompatible pointer type warning, since event handlers
 // can use specific pointer types for the self pointer
@@ -148,6 +158,11 @@ Widget widgets[WIDGET_COUNT] = {
         .id = WIDGET_CIPHER_SELECT,
         .visible = true,
         .handler = cipherSelectHandler
+    },
+    {
+        .id = WIDGET_START_GAME_BTN,
+        .visible = true,
+        .handler = startGameBtnHandler
     }
 };
 
@@ -158,7 +173,7 @@ Widget widgets[WIDGET_COUNT] = {
  */
 Widget *focused_widget = &widgets[0];
 
-#else
+#elifndef _UI_H_EXTERNS_DEFINED
 extern Widget widgets[WIDGET_COUNT];
 extern Widget *focused_widget;
 #endif  // _DEFINE_EXTERN

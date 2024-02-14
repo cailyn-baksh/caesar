@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <time.h>
 
+#if __INCLUDE_LEVEL__ == 0
+#define _DEFINE_EXTERN
+#endif
+
 typedef struct Game Game;
 
 /*
@@ -36,7 +40,6 @@ void shift_cipher(char *text, uint8_t key);
  * Encodes a string in place using a substitution cipher
  */
 void subst_cipher(char *text);
-
 
 /*
  * Represents a single game instance.
@@ -74,6 +77,35 @@ struct Game {
 
 void new_game(Game *game);
 void end_game(Game *game);
+
+typedef struct Cipher {
+    char *name;
+    cipherfn *func;
+} Cipher;
+
+#define CIPHER_COUNT 3
+
+#ifdef _DEFINE_EXTERN
+
+#define _CIPHER_H_EXTERNS_DEFINED
+
+Cipher ciphers[CIPHER_COUNT] = {
+    {
+        .name = "Caesar Cipher",
+        .func = nullptr
+    },
+    {
+        .name = "Shift Cipher",
+        .func = nullptr
+    },
+    {
+        .name = "Substitution Cipher",
+        .func = nullptr
+    }
+};
+#elifndef _CIPHER_H_EXTERNS_DEFINED
+extern Cipher ciphers[CIPHER_COUNT];
+#endif  // _DEFINE_EXTERN
 
 #endif  // _CIPHER_H_
 

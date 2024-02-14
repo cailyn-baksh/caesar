@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stddef.h>
@@ -9,16 +10,18 @@
 
 #include <ncurses.h>
 
+#define _DEFINE_EXTERN
 #include "cipher.h"
+#include "ui.h"
+#undef _DEFINE_EXTERN
+
 #include "log.h"
 #include "messages.h"
 #include "util.h"
 
-#define _DEFINE_EXTERN
-#include "ui.h"
-#undef _DEFINE_EXTERN
-
-#define FRAMERATE       24
+// Although the screen only updates automatically 5 times every second, input
+// events can trigger a redraw more frequently.
+#define FRAMERATE       5
 #define FRAMEPERIOD     (1.0 / FRAMERATE)
 
 #define KEY_CTRL(k) ((k) & 0x1F)
@@ -57,36 +60,162 @@ void end_game(Game *game) {
  * UI Element Callbacks *
  ************************/
 void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
-    // Is goto a good idea here?
+    static size_t cursor = 0;
+
+    bool forceRedraw = false;
+
+    print_log("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+
     switch (event) {
         case EVENT_CREATE:
-            print_log("Widget %04hXh recieved EVENT_CREATE", self->id);
             goto create;
         case EVENT_DESTROY:
-            print_log("Widget %04hXh recieved EVENT_DESTROY", self->id);
             goto destroy;
+        case EVENT_FOCUS:
+        case EVENT_BLUR:
+            goto change_focus;
         case EVENT_DRAW:
-            print_log("Widget %04hXh recieved EVENT_DRAW", self->id);
             goto draw;
-        default:
-            print_log("Widget %04hXh recieved event %X", self->id, event);
+        case EVENT_KEYPRESS:
+            goto keypress;
+    }
+
+    print_log("Widget %04hXh has no handler for this event. Ignoring.", self->id);
+
+    return;
+
+create:
+    self->win = newwin(CIPHER_COUNT+2, 24, 2, 0);
+    self->enabled = true;
+
+    self->data = malloc(sizeof(size_t));
+    deref_as(size_t, self->data) = cursor;
+    return;
+
+destroy:
+    delwin(self->win);
+    free(self->data);
+    return;
+
+change_focus:
+    forceRedraw = true;
+    goto draw;
+
+keypress:
+
+    switch (deref_as(int, data)) {
+        case KEY_UP:
+            if (cursor != 0) {
+                --cursor;
+            } else {
+                cursor = CIPHER_COUNT-1;
+            }
+
+            forceRedraw = true;
+            break;
+        case KEY_DOWN:
+            if (cursor < CIPHER_COUNT-1) {
+                ++cursor;
+            } else {
+                cursor = 0;
+            }
+
+            forceRedraw = true;
+            break;
+        case '\n':
+            deref_as(size_t, self->data) = cursor;
+            forceRedraw = true;
+            break;
+    }
+
+    if (!forceRedraw) return;
+
+draw:
+    for (size_t i=0; i < CIPHER_COUNT; ++i) {
+        int attrs = 0;
+
+        if (focused_widget == self && cursor == i) attrs |= A_STANDOUT;
+        if (deref_as(size_t, self->data) == i) attrs |= A_BOLD;
+        wattron(self->win, attrs);
+
+        mvwprintw(self->win, i+1, 1, "%s", ciphers[i].name);
+
+        wattroff(self->win, attrs);
+    }
+
+    titled_box(self->win, "Ciphers");
+
+    if (forceRedraw) {
+        // Force an immediate redraw
+        wrefresh(self->win);
+    } else {
+        // Redraw on next frame cycle
+        wnoutrefresh(self->win);
+    }
+    return;
+}
+
+void startGameBtnHandler(Widget *const self, Event event, const void *const data) {
+    bool forceRedraw = false;
+
+    print_log("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+
+    switch (event) {
+        case EVENT_CREATE:
+            goto create;
+        case EVENT_DESTROY:
+            goto destroy;
+        case EVENT_FOCUS:
+        case EVENT_BLUR:
+            goto change_focus;
+        case EVENT_DRAW:
+            goto draw;
+        case EVENT_KEYPRESS:
+            goto keypress;
     }
 
     return;
 
 create:
-    self->win = newwin(3, 5, 2, 0);
+    self->win = newwin(1, 24, LINES - 3, 0);
     self->enabled = true;
+
     return;
 
 destroy:
     delwin(self->win);
     return;
 
-draw:
-    mvwprintw(self->win, 2, 0, "h");
+change_focus:
+    forceRedraw = true;
+    goto draw;
 
-    wnoutrefresh(self->win);
+keypress:
+    switch (deref_as(int, data)) {
+        case '\n':
+            // Pressed
+            break;
+    }
+
+    return;
+
+draw:
+    ;
+    int attrs = A_BOLD;
+
+    if (focused_widget == self) attrs |= A_REVERSE;
+
+    wattron(self->win, attrs);
+    mvwprintw(self->win, 0, 0, "Start Game!");
+    wattroff(self->win, attrs);
+
+    if (forceRedraw) {
+        // Force an immediate redraw
+        wrefresh(self->win);
+    } else {
+        // Redraw on next frame cycle
+        wnoutrefresh(self->win);
+    }
     return;
 }
 
@@ -130,8 +259,6 @@ int main() {
         /* Draw UI */
 
         // Draw toplevel UI elements
-        mvprintw(0, 0, "k");
-
         wnoutrefresh(stdscr);
 
         // Draw visible widgets
@@ -153,7 +280,9 @@ int main() {
         do {
             int ch = getch();
 
-            if (ch != ERR) print_log("Recieved key %d ('%c')", ch, ch);
+            if (ch != ERR) {
+                print_log("Recieved key %d ('%c')", ch, isprint(ch) ? ch : ' ');
+            }
 
             // Global key events
             switch (ch) {
