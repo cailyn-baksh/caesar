@@ -6,10 +6,6 @@
 #include <stdint.h>
 #include <time.h>
 
-#if __INCLUDE_LEVEL__ == 0
-#define _DEFINE_EXTERN
-#endif
-
 typedef struct Game Game;
 
 /*
@@ -85,9 +81,10 @@ typedef struct Cipher {
 
 #define CIPHER_COUNT 3
 
-#ifdef _DEFINE_EXTERN
+// Globals
+#if (defined(_DEFINE_GLOBALS) && !defined(_CIPHER_H_GLOBALS_DEFINED) && __INCLUDE_LEVEL__ == 1) || __INCLUDE_LEVEL__ == 0
 
-#define _CIPHER_H_EXTERNS_DEFINED
+#define _CIPHER_H_GLOBALS_DEFINED
 
 Cipher ciphers[CIPHER_COUNT] = {
     {
@@ -103,9 +100,9 @@ Cipher ciphers[CIPHER_COUNT] = {
         .func = nullptr
     }
 };
-#elifndef _CIPHER_H_EXTERNS_DEFINED
+#elifndef _CIPHER_H_GLOBALS_DEFINED
 extern Cipher ciphers[CIPHER_COUNT];
-#endif  // _DEFINE_EXTERN
+#endif
 
 #endif  // _CIPHER_H_
 

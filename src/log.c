@@ -3,7 +3,9 @@
 #include <string.h>
 #include <time.h>
 
+#define _DEFINE_GLOBALS
 #include "log.h"
+#undef _DEFINE_GLOBALS
 
 #define INDENT "  "
 
@@ -21,16 +23,16 @@ void _init_log(FILE *f) {
         }
         fputc('\n', logfile);
 
-        print_log_src("Initialized logger.");
+        print_log_src(LOG_INFO, "Initialized logger.");
     } else {
         logfile = stderr;
 
-        print_log_src("Target log file stream was null; falling back to stderr.");
+        print_log_src(LOG_WARNING, "Target log file stream was null; falling back to stderr.");
     }
 }
 
 void close_log() {
-    print_log_src("Closing log file");
+    print_log_src(LOG_INFO, "Closing log file");
 
     if (logfile != nullptr && logfile != stderr && logfile != stdout) {
         fclose(logfile);
@@ -39,7 +41,22 @@ void close_log() {
     logfile = nullptr;
 }
 
-void print_log(const char *fmt, ...) {
+const char *logLevelToStr(enum LogLevel level) {
+    const char *strs =
+        "FATAL\0"
+        "ERROR\0"
+        "WARN\0\0"
+        "URGNT\0"
+        "INFO\0\0"
+        "DEBUG\0"
+        ;
+
+    return &strs[level];
+}
+
+void print_log(enum LogLevel level, const char *fmt, ...) {
+    if (level > logLevel) return;
+
     va_list args;
     va_start(args, fmt);
 
@@ -52,6 +69,9 @@ void print_log(const char *fmt, ...) {
     // [YYYY-MM-DDTHH:mm:ss]
     strftime(time_str, 32, "[%FT%T]", localtime(&cur_time));
     fprintf(f, "%s ", time_str);
+
+    // Log level
+    fprintf(f, "%s: ", logLevelToStr(level));
 
     // Print log message
     vfprintf(f, fmt, args);

@@ -30,12 +30,6 @@
  * - Mainloop draws each 
  */
 
-#if __INCLUDE_LEVEL__ == 0
-// Header file is being compiled on its own (i.e. statically analyzed). Ensure
-// that extern definitions are being analyzed instead of the declarations.
-#define _DEFINE_EXTERN
-#endif
-
 /*
  * UI events
  *
@@ -128,9 +122,9 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
 void startGameBtnHandler(Widget *const self, Event event, const void *const data);
 
 // Widget registry
-#ifdef _DEFINE_EXTERN
+#if (defined(_DEFINE_GLOBALS) && !defined(_UI_H_GLOBALS_DEFINED) && __INCLUDE_LEVEL__ == 1) || __INCLUDE_LEVEL__ == 0
 
-#define _UI_H_EXTERNS_DEFINED
+#define _UI_H_GLOBALS_DEFINED
 
 // Temporarily suppress incompatible pointer type warning, since event handlers
 // can use specific pointer types for the self pointer
@@ -160,7 +154,7 @@ Widget widgets[WIDGET_COUNT] = {
  */
 Widget *focused_widget = &widgets[0];
 
-#elifndef _UI_H_EXTERNS_DEFINED
+#elifndef _UI_H_GLOBALS_DEFINED
 extern Widget widgets[WIDGET_COUNT];
 extern Widget *focused_widget;
 #endif  // _DEFINE_EXTERN

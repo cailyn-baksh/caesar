@@ -14,7 +14,7 @@ A code-breaking game.
 - Ncurses
 - Libconfig
 
-## v1.0.0 Features/Todo list &mdash; 16.7% (6/36)
+## v1.0.0 Features/Todo list &mdash; 19.4% (7/36)
 
 - [ ] Curses UI
   - [ ] UI framework
@@ -43,7 +43,7 @@ A code-breaking game.
   - [ ] Edit config UI
 - [ ] Debug logging
   - [x] Basic logging to file
-  - [ ] Log levels & filters
+  - [x] Log levels & filters
 - [ ] Documentation
   - [ ] Developer documentation
     - [ ] Header docs (high-level overview)

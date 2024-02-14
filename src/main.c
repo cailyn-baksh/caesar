@@ -10,10 +10,10 @@
 
 #include <ncurses.h>
 
-#define _DEFINE_EXTERN
+#define _DEFINE_GLOBALS
 #include "cipher.h"
 #include "ui.h"
-#undef _DEFINE_EXTERN
+#undef _DEFINE_GLOBALS
 
 #include "log.h"
 #include "messages.h"
@@ -62,7 +62,7 @@ void end_game(Game *game) {
 void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
     static size_t cursor = 0;
 
-    print_log_src("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+    print_log_src(LOG_DEBUG, "Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
 
     switch (event) {
         case EVENT_CREATE:
@@ -78,7 +78,7 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
             goto keypress;
     }
 
-    print_log_src("Widget %04hXh has no handler for this event. Ignoring.", self->id);
+    print_log_src(LOG_DEBUG, "Widget %04hXh has no handler for this event. Ignoring.", self->id);
 
     return;
 
@@ -140,7 +140,7 @@ draw:
 }
 
 void startGameBtnHandler(Widget *const self, Event event, const void *const data) {
-    print_log_src("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+    print_log_src(LOG_DEBUG, "Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
 
     switch (event) {
         case EVENT_CREATE:
@@ -156,7 +156,7 @@ void startGameBtnHandler(Widget *const self, Event event, const void *const data
             goto keypress;
     }
 
-    print_log_src("Widget %04hXh has no handler for this event. Ignoring.", self->id);
+    print_log_src(LOG_DEBUG, "Widget %04hXh has no handler for this event. Ignoring.", self->id);
 
     return;
 
@@ -205,7 +205,7 @@ int main() {
     srand(time(nullptr));
 
     /* Init ncurses */
-    print_log_src("Initializing ncurses");
+    print_log_src(LOG_DEBUG, "Initializing ncurses");
 
     initscr();
     cbreak();
@@ -218,7 +218,7 @@ int main() {
 
     // Create widgets
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log_src("Create widget %04hXh", widgets[i].id);
+        print_log_src(LOG_INFO, "Create widget %04hXh", widgets[i].id);
         widgets[i].handler(&widgets[i], EVENT_CREATE, nullptr);
     }
 
@@ -229,7 +229,7 @@ int main() {
         .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
 
     /* Mainloop */
-    print_log_src("Begin mainloop");
+    print_log_src(LOG_DEBUG, "Begin mainloop");
     for (;;) {
         /* Draw UI */
 
@@ -251,7 +251,7 @@ int main() {
 
         // Process input if it as recieved
         if (ch != ERR) {
-            print_log("KEY [%d] %s", ch, keyname(ch), ch);
+            print_log(LOG_INFO, "KEYPRESS [%d] %s", ch, keyname(ch));
 
             // Global key events
             switch (ch) {
@@ -268,7 +268,7 @@ int main() {
                     // New Game
                     break;
 
-                case KEY_CTRL('Q'):  // TODO: change to a better key
+                case KEY_CTRL('W'):
                     goto cleanup;
             }
 
@@ -281,11 +281,11 @@ int main() {
 cleanup: /* Clean up */
     // Ncurses cleanup
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log_src("Destroy widget %04hXh", widgets[i].id);
+        print_log_src(LOG_INFO, "Destroy widget %04hXh", widgets[i].id);
         widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
     }
 
-    print_log_src("Exit curses mode");
+    print_log_src(LOG_DEBUG, "Exit curses mode");
     endwin();
 
     // Logging cleanup
