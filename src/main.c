@@ -62,9 +62,7 @@ void end_game(Game *game) {
 void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
     static size_t cursor = 0;
 
-    bool forceRedraw = false;
-
-    print_log("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+    print_log_src("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
 
     switch (event) {
         case EVENT_CREATE:
@@ -73,14 +71,14 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
             goto destroy;
         case EVENT_FOCUS:
         case EVENT_BLUR:
-            goto change_focus;
+            break;
         case EVENT_DRAW:
             goto draw;
         case EVENT_KEYPRESS:
             goto keypress;
     }
 
-    print_log("Widget %04hXh has no handler for this event. Ignoring.", self->id);
+    print_log_src("Widget %04hXh has no handler for this event. Ignoring.", self->id);
 
     return;
 
@@ -97,44 +95,34 @@ destroy:
     free(self->data);
     return;
 
-change_focus:
-    forceRedraw = true;
-    goto draw;
-
 keypress:
 
     switch (deref_as(int, data)) {
         case KEY_UP:
-            if (cursor != 0) {
+            if (cursor != 0)
                 --cursor;
-            } else {
+            else
                 cursor = CIPHER_COUNT-1;
-            }
-
-            forceRedraw = true;
             break;
         case KEY_DOWN:
-            if (cursor < CIPHER_COUNT-1) {
+            if (cursor < CIPHER_COUNT-1)
                 ++cursor;
-            } else {
+            else
                 cursor = 0;
-            }
-
-            forceRedraw = true;
             break;
         case '\n':
             deref_as(size_t, self->data) = cursor;
-            forceRedraw = true;
             break;
     }
 
-    if (!forceRedraw) return;
+    return;
 
 draw:
+    // Draw the registeredcipher;s names as a ligt
     for (size_t i=0; i < CIPHER_COUNT; ++i) {
         int attrs = 0;
 
-        if (focused_widget == self && cursor == i) attrs |= A_STANDOUT;
+        if (isfocused(self) && cursor == i) attrs |= A_STANDOUT;
         if (deref_as(size_t, self->data) == i) attrs |= A_BOLD;
         wattron(self->win, attrs);
 
@@ -145,20 +133,14 @@ draw:
 
     titled_box(self->win, "Ciphers");
 
-    if (forceRedraw) {
-        // Force an immediate redraw
-        wrefresh(self->win);
-    } else {
-        // Redraw on next frame cycle
-        wnoutrefresh(self->win);
-    }
+    // Update virtual screen
+    wnoutrefresh(self->win);
+
     return;
 }
 
 void startGameBtnHandler(Widget *const self, Event event, const void *const data) {
-    bool forceRedraw = false;
-
-    print_log("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+    print_log_src("Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
 
     switch (event) {
         case EVENT_CREATE:
@@ -167,12 +149,14 @@ void startGameBtnHandler(Widget *const self, Event event, const void *const data
             goto destroy;
         case EVENT_FOCUS:
         case EVENT_BLUR:
-            goto change_focus;
+            break;
         case EVENT_DRAW:
             goto draw;
         case EVENT_KEYPRESS:
             goto keypress;
     }
+
+    print_log_src("Widget %04hXh has no handler for this event. Ignoring.", self->id);
 
     return;
 
@@ -185,10 +169,6 @@ create:
 destroy:
     delwin(self->win);
     return;
-
-change_focus:
-    forceRedraw = true;
-    goto draw;
 
 keypress:
     switch (deref_as(int, data)) {
@@ -203,19 +183,14 @@ draw:
     ;
     int attrs = A_BOLD;
 
-    if (focused_widget == self) attrs |= A_REVERSE;
+    if (isfocused(self)) attrs |= A_REVERSE;
 
     wattron(self->win, attrs);
     mvwprintw(self->win, 0, 0, "Start Game!");
     wattroff(self->win, attrs);
 
-    if (forceRedraw) {
-        // Force an immediate redraw
-        wrefresh(self->win);
-    } else {
-        // Redraw on next frame cycle
-        wnoutrefresh(self->win);
-    }
+    // Update virtual screen
+    wnoutrefresh(self->win);
     return;
 }
 
@@ -230,7 +205,7 @@ int main() {
     srand(time(nullptr));
 
     /* Init ncurses */
-    print_log("Initializing ncurses");
+    print_log_src("Initializing ncurses");
 
     initscr();
     cbreak();
@@ -243,7 +218,7 @@ int main() {
 
     // Create widgets
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log("Create widget %04hXh", widgets[i].id);
+        print_log_src("Create widget %04hXh", widgets[i].id);
         widgets[i].handler(&widgets[i], EVENT_CREATE, nullptr);
     }
 
@@ -254,7 +229,7 @@ int main() {
         .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
 
     /* Mainloop */
-    print_log("Begin mainloop");
+    print_log_src("Begin mainloop");
     for (;;) {
         /* Draw UI */
 
@@ -272,17 +247,11 @@ int main() {
         doupdate();
 
         /* Handle input */
+        int ch = getch();  // Blocks for at most FRAMEPERIOD seconds
 
-        // Recieve input until it's time for a redraw
-        struct timespec input_begin;
-        timespec_get(&input_begin, TIME_UTC);
-
-        do {
-            int ch = getch();
-
-            if (ch != ERR) {
-                print_log("Recieved key %d ('%c')", ch, isprint(ch) ? ch : ' ');
-            }
+        // Process input if it as recieved
+        if (ch != ERR) {
+            print_log("KEY [%d] %s", ch, keyname(ch), ch);
 
             // Global key events
             switch (ch) {
@@ -299,26 +268,24 @@ int main() {
                     // New Game
                     break;
 
-                case 'q':  // TODO: change to a better key
+                case KEY_CTRL('Q'):  // TODO: change to a better key
                     goto cleanup;
             }
 
             // UI-specific key events
-            if (ch != ERR) {
-                widgets[focus_index]
-                    .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
-            }
-        } while (timesince(&input_begin, TIME_UTC) < FRAMEPERIOD);
+            widgets[focus_index]
+                .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
+        }
     }
 
 cleanup: /* Clean up */
     // Ncurses cleanup
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log("Destroy widget %04hXh", widgets[i].id);
+        print_log_src("Destroy widget %04hXh", widgets[i].id);
         widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
     }
 
-    print_log("Exit curses mode");
+    print_log_src("Exit curses mode");
     endwin();
 
     // Logging cleanup

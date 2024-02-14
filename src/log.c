@@ -21,16 +21,16 @@ void _init_log(FILE *f) {
         }
         fputc('\n', logfile);
 
-        print_log("Initialized logger.");
+        print_log_src("Initialized logger.");
     } else {
         logfile = stderr;
 
-        print_log("Target log file stream was null; falling back to stderr.");
+        print_log_src("Target log file stream was null; falling back to stderr.");
     }
 }
 
 void close_log() {
-    print_log("Closing log file");
+    print_log_src("Closing log file");
 
     if (logfile != nullptr && logfile != stderr && logfile != stdout) {
         fclose(logfile);
@@ -39,7 +39,7 @@ void close_log() {
     logfile = nullptr;
 }
 
-void _print_log(const char *fmt, ...) {
+void print_log(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 

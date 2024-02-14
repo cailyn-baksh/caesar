@@ -17,7 +17,7 @@ void tab_focus(bool shift) {
             focused_widget = &widgets[WIDGET_COUNT-1];
         } else {
             // Focus previous widget
-            focused_widget -= sizeof(Widget);
+            --focused_widget;
         }
     } else {
         // Tab: move forwards
@@ -26,7 +26,7 @@ void tab_focus(bool shift) {
             focused_widget = &widgets[0];
         } else {
             // Focus next widget
-            focused_widget += 1;
+            ++focused_widget;
         }
     }
 

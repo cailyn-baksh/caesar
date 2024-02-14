@@ -112,19 +112,6 @@ typedef struct Widget {
     void *data;
 } Widget;
 
-/************************
- * General UI Functions *
- ************************/
-
-/*
- * Handle a Tab or Shift-Tab action by shifting the focus.
- *
- * shift                A boolean indicating which direction to tab in.
- */
-void tab_focus(bool shift);
-
-void titled_box(WINDOW *win, const char *title);
-
 /*************************************
  * Widget Declarations & Definitions *
  *************************************/
@@ -177,6 +164,28 @@ Widget *focused_widget = &widgets[0];
 extern Widget widgets[WIDGET_COUNT];
 extern Widget *focused_widget;
 #endif  // _DEFINE_EXTERN
+
+
+/************************
+ * General UI Functions *
+ ************************/
+
+/*
+ * Tests whether a widget is currently focused by the user.
+ *
+ * pWidget              A pointer to the widget to check.
+ * Returns a boolean indicating whether or not the widget is in focus.
+ */
+#define isfocused(pWidget) (focused_widget == pWidget)
+
+/*
+ * Handle a Tab or Shift-Tab action by shifting the focus.
+ *
+ * shift                A boolean indicating which direction to tab in.
+ */
+void tab_focus(bool shift);
+
+void titled_box(WINDOW *win, const char *title);
 
 #endif  // _UI_H_
 

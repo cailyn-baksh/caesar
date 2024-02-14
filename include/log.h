@@ -26,14 +26,23 @@ void _init_log(FILE *f);
 void close_log();
 
 // TODO: log in another thread to prevent lag
-void _print_log(const char *fmt, ...);
+/*
+ * Prints a formatted string to the log file, in the format
+ *
+ * "[YYYY-MM-DDTHH:mm:ss] $fmt\n" % va_args
+ *
+ * Arguments: See printf(3).
+ */
+void print_log(const char *fmt, ...);
 
 /*
- * Prints a formatted string to the log file, along with the source file the
- * log message originated from and the time the message occurred at. This
- * function has the same arguments as printf(3).
+ * Prints a formatted string to the log file, in the format
+ *
+ * "[YYYY-MM-DDTHH:mm:ss] FILENAME:FUNCNAME():LINE $fmt\n" % va_args
+ *
+ * Arguments: See printf(3).
  */
-#define print_log(fmt, ...) _print_log("%s:%s():%zu: " fmt, __BASE_FILE__, __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
+#define print_log_src(fmt, ...) print_log("%s:%s():%zu: " fmt, __BASE_FILE__, __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 
 void log_game_state(FILE *file, Game *game);
 
