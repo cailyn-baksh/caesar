@@ -66,55 +66,21 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
 
     switch (event) {
         case EVENT_CREATE:
-            goto create;
+            self->win = newwin(CIPHER_COUNT+2, 24, 2, 0);
+            self->enabled = true;
+
+            self->data = malloc(sizeof(size_t));
+            deref_as(size_t, self->data) = cursor;
+            break;
         case EVENT_DESTROY:
-            goto destroy;
-        case EVENT_FOCUS:
-        case EVENT_BLUR:
+            delwin(self->win);
+            free(self->data);
             break;
         case EVENT_DRAW:
             goto draw;
         case EVENT_KEYPRESS:
             goto keypress;
     }
-
-    print_log_src(LOG_DEBUG, "Widget %04hXh has no handler for this event. Ignoring.", self->id);
-
-    return;
-
-create:
-    self->win = newwin(CIPHER_COUNT+2, 24, 2, 0);
-    self->enabled = true;
-
-    self->data = malloc(sizeof(size_t));
-    deref_as(size_t, self->data) = cursor;
-    return;
-
-destroy:
-    delwin(self->win);
-    free(self->data);
-    return;
-
-keypress:
-
-    switch (deref_as(int, data)) {
-        case KEY_UP:
-            if (cursor != 0)
-                --cursor;
-            else
-                cursor = CIPHER_COUNT-1;
-            break;
-        case KEY_DOWN:
-            if (cursor < CIPHER_COUNT-1)
-                ++cursor;
-            else
-                cursor = 0;
-            break;
-        case '\n':
-            deref_as(size_t, self->data) = cursor;
-            break;
-    }
-
     return;
 
 draw:
@@ -137,6 +103,26 @@ draw:
     wnoutrefresh(self->win);
 
     return;
+
+keypress:
+    switch (deref_as(int, data)) {
+        case KEY_UP:
+            if (cursor != 0)
+                --cursor;
+            else
+                cursor = CIPHER_COUNT-1;
+            break;
+        case KEY_DOWN:
+            if (cursor < CIPHER_COUNT-1)
+                ++cursor;
+            else
+                cursor = 0;
+            break;
+        case '\n':
+            deref_as(size_t, self->data) = cursor;
+            break;
+    }
+    return;
 }
 
 void startGameBtnHandler(Widget *const self, Event event, const void *const data) {
@@ -144,37 +130,16 @@ void startGameBtnHandler(Widget *const self, Event event, const void *const data
 
     switch (event) {
         case EVENT_CREATE:
-            goto create;
+            self->win = newwin(1, 24, LINES - 3, 0);
+            self->enabled = true;
+            break;
         case EVENT_DESTROY:
-            goto destroy;
-        case EVENT_FOCUS:
-        case EVENT_BLUR:
+            delwin(self->win);
             break;
         case EVENT_DRAW:
             goto draw;
         case EVENT_KEYPRESS:
             goto keypress;
-    }
-
-    print_log_src(LOG_DEBUG, "Widget %04hXh has no handler for this event. Ignoring.", self->id);
-
-    return;
-
-create:
-    self->win = newwin(1, 24, LINES - 3, 0);
-    self->enabled = true;
-
-    return;
-
-destroy:
-    delwin(self->win);
-    return;
-
-keypress:
-    switch (deref_as(int, data)) {
-        case '\n':
-            // Pressed
-            break;
     }
 
     return;
@@ -191,6 +156,14 @@ draw:
 
     // Update virtual screen
     wnoutrefresh(self->win);
+    return;
+
+keypress:
+    switch (deref_as(int, data)) {
+        case '\n':
+            // Pressed
+            break;
+    }
     return;
 }
 
@@ -238,7 +211,7 @@ int main() {
 
         // Draw visible widgets
         for (size_t i=0; i < WIDGET_COUNT; ++i) {
-            if (widgets[i].visible == true) {
+            if (widgets[i].visible) {
                 widgets[i].handler(&widgets[i], EVENT_DRAW, nullptr);
             }
         }

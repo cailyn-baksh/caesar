@@ -9,7 +9,7 @@
 
 #define INDENT "  "
 
-FILE *logfile = nullptr;
+static FILE *logfile = nullptr;
 
 void _init_log(FILE *f) {
     if (logfile != nullptr) close_log();
@@ -77,7 +77,6 @@ void print_log(enum LogLevel level, const char *fmt, ...) {
     vfprintf(f, fmt, args);
 
     fprintf(f, "\n");
-    fflush(f);
 
     va_end(args);
 }
