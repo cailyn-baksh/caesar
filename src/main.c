@@ -22,7 +22,7 @@
 // Although the screen only updates automatically 5 times every second, input
 // events can trigger a redraw more frequently.
 #define FRAMERATE       5
-#define FRAMEPERIOD     (1.0 / FRAMERATE)
+#define FRAMEPERIOD     (1000.0 / FRAMERATE)
 
 #define KEY_CTRL(k) ((k) & 0x1F)
 
@@ -141,7 +141,6 @@ void startGameBtnHandler(Widget *const self, Event event, const void *const data
         case EVENT_KEYPRESS:
             goto keypress;
     }
-
     return;
 
 draw:
@@ -170,12 +169,31 @@ keypress:
 /********
  * Main *
  ********/
+void cleanup(void) {
+    // Ncurses cleanup
+    for (size_t i=0; i < WIDGET_COUNT; ++i) {
+        print_log_src(LOG_INFO, "Destroy widget %04hXh", widgets[i].id);
+        widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
+    }
+
+    print_log_src(LOG_DEBUG, "Exit curses mode");
+    endwin();
+
+    // Logging cleanup
+    print_log(LOG_INFO, "Program terminated normally");
+    close_log();
+}
+
 int main() {
     // Init logging
     init_log("caesar.log");
 
     // Seed RNG
     srand(time(nullptr));
+
+    // Register handlers
+    atexit(cleanup);
+    at_quick_exit(close_log);
 
     /* Init ncurses */
     print_log_src(LOG_DEBUG, "Initializing ncurses");
@@ -187,7 +205,7 @@ int main() {
     keypad(stdscr, TRUE);
 
     // Set getch to block for up to one frame duration
-    timeout(FRAMEPERIOD * 1000);
+    timeout(FRAMEPERIOD);
 
     // Create widgets
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
@@ -242,27 +260,15 @@ int main() {
                     break;
 
                 case KEY_CTRL('W'):
-                    goto cleanup;
+                    exit(0);
+                default:
+                    // UI-specific key events
+                    widgets[focus_index]
+                        .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
             }
 
-            // UI-specific key events
-            widgets[focus_index]
-                .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
         }
     }
-
-cleanup: /* Clean up */
-    // Ncurses cleanup
-    for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log_src(LOG_INFO, "Destroy widget %04hXh", widgets[i].id);
-        widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
-    }
-
-    print_log_src(LOG_DEBUG, "Exit curses mode");
-    endwin();
-
-    // Logging cleanup
-    close_log();
 
     return 0;
 }

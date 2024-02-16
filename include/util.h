@@ -31,14 +31,5 @@ uint32_t fnv1a32(const char *msg);
  */
 uintmax_t sleep_ms(uintmax_t ms);
 
-/*
- * Determines the number of seconds since the given time.
- *
- * ts_start     A pointer to the timespec structure to compare against.
- * base         The time base of used to acquire a
- * Returns the duration in seconds as a double with nanosecond precision.
- */
-double timesince(const struct timespec *const ts_start, int base);
-
 #endif  // _UTIL_H_
 

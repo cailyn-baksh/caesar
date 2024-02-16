@@ -22,8 +22,6 @@ void _init_log(FILE *f) {
             fputc('-', logfile);
         }
         fputc('\n', logfile);
-
-        print_log_src(LOG_INFO, "Initialized logger.");
     } else {
         logfile = stderr;
 
@@ -31,9 +29,7 @@ void _init_log(FILE *f) {
     }
 }
 
-void close_log() {
-    print_log_src(LOG_INFO, "Closing log file");
-
+void close_log(void) {
     if (logfile != nullptr && logfile != stderr && logfile != stdout) {
         fclose(logfile);
     }
@@ -81,9 +77,9 @@ void print_log(enum LogLevel level, const char *fmt, ...) {
     va_end(args);
 }
 
-void log_game_state(FILE *file, Game *game) {
+void log_game_state(Game *game) {
     if (game == NULL) {
-        fprintf(file, "log_game_state: Game ptr is NULL!");
+        fprintf(logfile, "log_game_state: Game ptr is NULL!");
         return;
     }
 
@@ -100,15 +96,15 @@ void log_game_state(FILE *file, Game *game) {
     char time_str[16] = { '\0' };
     strftime(time_str, 16, "%a %T", localtime(&game->start_time));
 
-    fprintf(file,
+    fprintf(logfile,
             "Game @ %p\n"
-            INDENT ".key = [%p] %s\n"
-            INDENT ".ciphertext = [%p] \"%s\"\n"
-            INDENT ".buffer_size = %zu\n"
-            INDENT ".answer_hash = %" PRIX32 "\n"
-            INDENT ".paused = %s\n"
-            INDENT ".start_time = %s\n"
-            INDENT ".extra_time = %.2F\n",
+            "  .key = [%p] %s\n"
+            "  .ciphertext = [%p] \"%s\"\n"
+            "  .buffer_size = %zu\n"
+            "  .answer_hash = %" PRIX32 "\n"
+            "  .paused = %s\n"
+            "  .start_time = %s\n"
+            "  .extra_time = %.2F\n",
             game, game->key, key_preview, game->ciphertext, cipher_preview,
             game->buffer_size, game->answer_hash,
             game->paused ? "true" : "false", time_str, game->extra_time);

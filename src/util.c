@@ -32,13 +32,3 @@ uintmax_t sleep_ms(uintmax_t ms) {
     return 0;
 }
 
-double timesince(const struct timespec *const ts_start, int base) {
-    struct timespec ts_now;
-    timespec_get(&ts_now, base);
-
-    double diff = ts_now.tv_sec - ts_start->tv_sec;
-    diff += (ts_now.tv_nsec - ts_start->tv_nsec) / 1'000'000'000.0;
-
-    return diff;
-}
-

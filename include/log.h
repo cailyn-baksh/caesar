@@ -39,7 +39,7 @@ void _init_log(FILE *f);
 /*
  * Closes the log file
  */
-void close_log();
+void close_log(void);
 
 // TODO: log in another thread to prevent lag
 /*
@@ -64,7 +64,10 @@ void print_log(enum LogLevel level, const char *fmt, ...);
  */
 #define print_log_src(lvl, fmt, ...) print_log(lvl, "%s:%s():%zu: " fmt, __BASE_FILE__, __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__)
 
-void log_game_state(FILE *file, Game *game);
+/*
+ * Writes the contents of a Game struct to the log file.
+ */
+void log_game_state(Game *game);
 
 #endif  // _LOG_H_
 
