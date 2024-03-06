@@ -21,7 +21,7 @@ enum LogLevel {
 // Globals
 #if (defined(_DEFINE_GLOBALS) && !defined(_LOG_H_GLOBALS_DEFINED) && __INCLUDE_LEVEL__ == 1) || __INCLUDE_LEVEL__ == 0
 #define _LOG_H_GLOBALS_DEFINED
-enum LogLevel logLevel = LOG_INFO;
+enum LogLevel logLevel = LOG_DEBUG;
 #elifndef _LOG_H_GLOBALS_DEFINED
 extern enum LogLevel logLevel;
 #endif  // _DEFINE_GLOBALS

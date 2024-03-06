@@ -2,13 +2,14 @@
 #include <stdlib.h>
 
 #include "cipher.h"
+#include "util.h"
 
 void caesar_cipher(Game *game) {
-    if (game->key == NULL) {
+    if (game->key == nullptr) {
         // Generate key
         game->key_size = sizeof(uint8_t);
         game->key = malloc(game->key_size);
-        *game->key = (uint8_t)rand();
+        deref_as(uint8_t, game->key) = rand();
     }
 
     char *text = game->ciphertext;
@@ -33,7 +34,7 @@ void caesar_cipher(Game *game) {
             continue;
         }
 
-        *text = (((ch - base) + *game->key) % mod) + base;
+        *text = (((ch - base) + deref_as(uint8_t, game->key)) % mod) + base;
     }
 }
 

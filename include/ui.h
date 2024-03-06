@@ -83,8 +83,6 @@ typedef void EventHandler(void *const self, Event event, const void *const data)
 /*
  * A wrapper around an ncurses WINDOW.
  *
- * id                   An identifier number for this widget.
- *
  * win                  The underlying WINDOW
  *
  * visible              Whether or not the widget is currently to be rendered
@@ -95,8 +93,6 @@ typedef void EventHandler(void *const self, Event event, const void *const data)
  * data                 Stores widget-specific data.
  */
 typedef struct Widget {
-    unsigned short id;
-
     WINDOW *win;
 
     bool visible;
@@ -110,16 +106,15 @@ typedef struct Widget {
  * Widget Declarations & Definitions *
  *************************************/
 
-#define WIDGET_COUNT 2
+#define WIDGET_COUNT 3
 
 // Widget IDs
-#define WIDGET_ANON                 0x0000
-#define WIDGET_CIPHER_SELECT        0x0001
-#define WIDGET_START_GAME_BTN         0x0002
+// These IDs correspond to the widget's index in the widget array
 
 // Widget handler functions
 void cipherSelectHandler(Widget *const self, Event event, const void *const data);
 void startGameBtnHandler(Widget *const self, Event event, const void *const data);
+void displayCipherHandler(Widget *const self, Event event, const void *const data);
 
 // Widget registry
 #if (defined(_DEFINE_GLOBALS) && !defined(_UI_H_GLOBALS_DEFINED) && __INCLUDE_LEVEL__ == 1) || __INCLUDE_LEVEL__ == 0
@@ -136,14 +131,16 @@ void startGameBtnHandler(Widget *const self, Event event, const void *const data
  */
 Widget widgets[WIDGET_COUNT] = {
     {
-        .id = WIDGET_CIPHER_SELECT,
         .visible = true,
         .handler = cipherSelectHandler
     },
     {
-        .id = WIDGET_START_GAME_BTN,
         .visible = true,
         .handler = startGameBtnHandler
+    },
+    {
+        .visible = false,
+        .handler = displayCipherHandler
     }
 };
 
@@ -158,6 +155,10 @@ Widget *focused_widget = &widgets[0];
 extern Widget widgets[WIDGET_COUNT];
 extern Widget *focused_widget;
 #endif  // _DEFINE_EXTERN
+
+#define WIDGET_CIPHER_SELECT        (widgets[0])
+#define WIDGET_START_GAME_BTN       (widgets[1])
+#define WIDGET_DISPLAY_CIPHER       (widgets[2])
 
 
 /************************

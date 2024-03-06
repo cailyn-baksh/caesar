@@ -2,7 +2,7 @@ NAME = caesar
 VERSION = v0.2.0
 SRCS = $(wildcard src/*.c)
 INCLUDES = include/
-LIBS = ncurses
+LIBS = m ncurses
 
 CLEAN_PATTERNS = ./bin/* ./*.log
 

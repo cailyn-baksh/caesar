@@ -26,20 +26,26 @@
 
 #define KEY_CTRL(k) ((k) & 0x1F)
 
-static Game game;
+static Game game = { 0 };
 
 /*************************
  * Game struct functions *
  *************************/
 void new_game(Game *game) {
-    // Set all values to NULL
-    memset(game, 0, sizeof(Game));
-
     // Initialize ciphertext and buffer_size with a cleartext message
     game->buffer_size = getmsg(&game->ciphertext);
 
     // Get a hash of the cleartext message
     game->answer_hash = fnv1a32(game->ciphertext);
+
+    print_log_src(LOG_DEBUG, "Cleartext message: %s", game->ciphertext);
+
+    // Encipher the message
+    if (game->cipher != nullptr) {
+        print_log_src(LOG_DEBUG, "Enciphering message");
+        game->cipher(game);
+    }
+    print_log_src(LOG_DEBUG, "Ciphertext message: %s", game->ciphertext);
 
     // Config game timer
     game->paused = false;
@@ -52,8 +58,11 @@ void new_game(Game *game) {
 }
 
 void end_game(Game *game) {
-    free(game->key);
-    free(game->ciphertext);
+    //free(game->key);
+    //free(game->ciphertext);
+
+    // Set all values to NULL
+    memset(game, 0, sizeof(Game));
 }
 
 /************************
@@ -62,7 +71,7 @@ void end_game(Game *game) {
 void cipherSelectHandler(Widget *const self, Event event, const void *const data) {
     static size_t cursor = 0;
 
-    print_log_src(LOG_DEBUG, "Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+    print_log_src(LOG_DEBUG, "Widget recieved event code 0x%X with data ptr %p", event, data);
 
     switch (event) {
         case EVENT_CREATE:
@@ -71,6 +80,8 @@ void cipherSelectHandler(Widget *const self, Event event, const void *const data
 
             self->data = malloc(sizeof(size_t));
             deref_as(size_t, self->data) = cursor;
+
+            game.cipher = ciphers[cursor].func;
             break;
         case EVENT_DESTROY:
             delwin(self->win);
@@ -120,13 +131,14 @@ keypress:
             break;
         case '\n':
             deref_as(size_t, self->data) = cursor;
+            game.cipher = ciphers[cursor].func;
             break;
     }
     return;
 }
 
 void startGameBtnHandler(Widget *const self, Event event, const void *const data) {
-    print_log_src(LOG_DEBUG, "Widget %04hXh recieved event code 0x%X with data ptr %p", self->id, event, data);
+    print_log_src(LOG_DEBUG, "Widget recieved event code 0x%X with data ptr %p", event, data);
 
     switch (event) {
         case EVENT_CREATE:
@@ -160,9 +172,51 @@ draw:
 keypress:
     switch (deref_as(int, data)) {
         case '\n':
-            // Pressed
+            // Pressed; start new game
+            print_log(LOG_INFO, "Starting new game");
+            new_game(&game);
+
+            // Update which widgets are visible
+            WIDGET_CIPHER_SELECT.visible = false;
+            WIDGET_START_GAME_BTN.visible = false;
+
+            WIDGET_DISPLAY_CIPHER.visible = true;
+
+            // Clear screen
+            clear();
             break;
     }
+    return;
+}
+
+void displayCipherHandler(Widget *const self, Event event, const void *const data) {
+    print_log_src(LOG_DEBUG, "Widget recieved event code 0x%X with data ptr %p", event, data);
+
+    switch (event) {
+        case EVENT_CREATE:
+            self->win = newwin(10, fmin(50, COLS), 0, 0);
+            self->enabled = true;
+            break;
+        case EVENT_DESTROY:
+            delwin(self->win);
+            break;
+        case EVENT_DRAW:
+            goto draw;
+        case EVENT_KEYPRESS:
+            goto keypress;
+    }
+    return;
+
+draw:
+    mvwprintw(self->win, 1, 1, "%s", game.ciphertext);
+
+    titled_box(self->win, "Cipher");
+
+    // Update virtual screen
+    wnoutrefresh(self->win);
+    return;
+
+keypress:
     return;
 }
 
@@ -172,12 +226,16 @@ keypress:
 void cleanup(void) {
     // Ncurses cleanup
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log_src(LOG_INFO, "Destroy widget %04hXh", widgets[i].id);
         widgets[i].handler(&widgets[i], EVENT_DESTROY, nullptr);
     }
+    print_log(LOG_DEBUG, "Destroyed all widgets successfully");
 
-    print_log_src(LOG_DEBUG, "Exit curses mode");
+    // Exit curses
     endwin();
+
+    // Cleanup game struct
+    end_game(&game);
+    print_log(LOG_DEBUG, "Destroyed game struct");
 
     // Logging cleanup
     print_log(LOG_INFO, "Program terminated normally");
@@ -209,15 +267,13 @@ int main() {
 
     // Create widgets
     for (size_t i=0; i < WIDGET_COUNT; ++i) {
-        print_log_src(LOG_INFO, "Create widget %04hXh", widgets[i].id);
         widgets[i].handler(&widgets[i], EVENT_CREATE, nullptr);
     }
 
     size_t focus_index = 0;
 
     // Send focus event to the initially focused widget
-    widgets[focus_index]
-        .handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
+    focused_widget->handler(&widgets[focus_index], EVENT_FOCUS, nullptr);
 
     /* Mainloop */
     print_log_src(LOG_DEBUG, "Begin mainloop");
@@ -263,10 +319,9 @@ int main() {
                     exit(0);
                 default:
                     // UI-specific key events
-                    widgets[focus_index]
-                        .handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
+                    focused_widget->
+                        handler(&widgets[focus_index], EVENT_KEYPRESS, &ch);
             }
-
         }
     }
 

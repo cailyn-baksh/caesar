@@ -18,7 +18,7 @@ typedef struct Game Game;
  *          NULL, then a key is generated.
  * Returns the size of the key buffer.
  */
-typedef size_t cipherfn(char *const textbuf, void **keybuf);
+typedef void cipherfn(Game *game);
 
 /*
  * Encodes a string in place using a caesar cipher with the given key. This is
@@ -58,7 +58,7 @@ void subst_cipher(char *text);
 struct Game {
     cipherfn *cipher;
 
-    uint8_t *key;
+    void *key;
     size_t key_size;
 
     char *ciphertext;
@@ -89,7 +89,7 @@ typedef struct Cipher {
 Cipher ciphers[CIPHER_COUNT] = {
     {
         .name = "Caesar Cipher",
-        .func = nullptr
+        .func = caesar_cipher
     },
     {
         .name = "Shift Cipher",

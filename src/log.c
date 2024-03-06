@@ -67,12 +67,13 @@ void print_log(enum LogLevel level, const char *fmt, ...) {
     fprintf(f, "%s ", time_str);
 
     // Log level
-    fprintf(f, "%s: ", logLevelToStr(level));
+    fprintf(f, "%5s: ", logLevelToStr(level));
 
     // Print log message
     vfprintf(f, fmt, args);
 
     fprintf(f, "\n");
+    fflush(f);
 
     va_end(args);
 }
@@ -89,7 +90,7 @@ void log_game_state(Game *game) {
 
     char key_preview[20] = { '\0' };
     for (size_t i=0; (i < game->key_size) && (i < 8); ++i) {
-        sprintf(&key_preview[i*2], "%02" PRIX8, game->key[i]);
+        sprintf(&key_preview[i*2], "%02" PRIX8, ((uint8_t *)game->key)[i]);
     }
     strcpy(&cipher_preview[16], "...");
 
