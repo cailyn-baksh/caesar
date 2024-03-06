@@ -38,12 +38,17 @@ void caesar_cipher(Game *game) {
     }
 }
 
-void shift_cipher(char *text, uint8_t key) {
-    while (*text) {
-        putchar(*text);
-        *text += key;
-        putchar(*text);
-        putchar('\n');
-        ++text;
+void shift_cipher(Game *game) {
+    if (game->key == nullptr) {
+        // Generate key
+        game->key_size = sizeof(uint8_t);
+        game->key = malloc(game->key_size);
+        deref_as(uint8_t, game->key) = rand() % 95;
+    }
+
+    char *text = game->ciphertext;
+
+    for (; *text; ++text) {
+        *text = (((*text - ' ') + deref_as(uint8_t, game->key)) % 95) + ' ';
     }
 }

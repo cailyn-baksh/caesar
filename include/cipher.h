@@ -30,7 +30,7 @@ void caesar_cipher(Game *game);
 /*
  * Encodes a string in place using a shift cipher with the given key
  */
-void shift_cipher(char *text, uint8_t key);
+void shift_cipher(Game *game);
 
 /*
  * Encodes a string in place using a substitution cipher
@@ -93,7 +93,7 @@ Cipher ciphers[CIPHER_COUNT] = {
     },
     {
         .name = "Shift Cipher",
-        .func = nullptr
+        .func = shift_cipher
     },
     {
         .name = "Substitution Cipher",

@@ -26,7 +26,7 @@ A code-breaking game.
   - [ ] Show decrypted text overlaid/side-by-side as progress is made
 - [ ] Ciphers
   - [x] Caesar cipher
-  - [ ] ASCII shift cipher
+  - [x] ASCII shift cipher
   - [ ] Substitution cipher
   - [ ] XOR cipher
 - [ ] Messages
