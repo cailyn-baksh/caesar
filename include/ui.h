@@ -106,12 +106,13 @@ typedef struct Widget {
  * Widget Declarations & Definitions *
  *************************************/
 
-#define WIDGET_COUNT 3
+#define WIDGET_COUNT 4
 
 // Widget IDs
 // These IDs correspond to the widget's index in the widget array
 
 // Widget handler functions
+void helpScreenHandler(Widget *const self, Event event, const void *const data);
 void cipherSelectHandler(Widget *const self, Event event, const void *const data);
 void startGameBtnHandler(Widget *const self, Event event, const void *const data);
 void displayCipherHandler(Widget *const self, Event event, const void *const data);
@@ -130,6 +131,10 @@ void displayCipherHandler(Widget *const self, Event event, const void *const dat
  * Array of all the widgets
  */
 Widget widgets[WIDGET_COUNT] = {
+    {
+        .visible = false,
+        .handler = helpScreenHandler
+    },
     {
         .visible = true,
         .handler = cipherSelectHandler
@@ -156,9 +161,10 @@ extern Widget widgets[WIDGET_COUNT];
 extern Widget *focused_widget;
 #endif  // _DEFINE_EXTERN
 
-#define WIDGET_CIPHER_SELECT        (widgets[0])
-#define WIDGET_START_GAME_BTN       (widgets[1])
-#define WIDGET_DISPLAY_CIPHER       (widgets[2])
+#define WIDGET_HELP_SCREEN          (widgets[0])
+#define WIDGET_CIPHER_SELECT        (widgets[1])
+#define WIDGET_START_GAME_BTN       (widgets[2])
+#define WIDGET_DISPLAY_CIPHER       (widgets[3])
 
 
 /************************

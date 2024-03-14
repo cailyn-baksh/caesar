@@ -10,25 +10,27 @@ void tab_focus(bool shift) {
     Widget *prevFocus = focused_widget;
 
     // Change focused widget
-    if (shift) {
-        // Shift-Tab: move backwards
-        if (focused_widget == &widgets[0]) {
-            // First widget is focused. Loop around to last widget
-            focused_widget = &widgets[WIDGET_COUNT-1];
+    do {
+        if (shift) {
+            // Shift-Tab: move backwards
+            if (focused_widget == &widgets[0]) {
+                // First widget is focused. Loop around to last widget
+                focused_widget = &widgets[WIDGET_COUNT-1];
+            } else {
+                // Focus previous widget
+                --focused_widget;
+            }
         } else {
-            // Focus previous widget
-            --focused_widget;
+            // Tab: move forwards
+            if (focused_widget == &widgets[WIDGET_COUNT-1]) {
+                // Last widget is focused. Loop around to first widget
+                focused_widget = &widgets[0];
+            } else {
+                // Focus next widget
+                ++focused_widget;
+            }
         }
-    } else {
-        // Tab: move forwards
-        if (focused_widget == &widgets[WIDGET_COUNT-1]) {
-            // Last widget is focused. Loop around to first widget
-            focused_widget = &widgets[0];
-        } else {
-            // Focus next widget
-            ++focused_widget;
-        }
-    }
+    } while (!focused_widget->visible);  // Skip over invisible widgets
 
     // Send blur event to currently focused widget
     prevFocus->handler(prevFocus, EVENT_BLUR, nullptr);

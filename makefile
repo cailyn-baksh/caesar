@@ -1,8 +1,12 @@
 NAME = caesar
 VERSION = v0.2.0
 SRCS = $(wildcard src/*.c)
+RES = $(wildcard res/*)
 INCLUDES = include/
 LIBS = m ncurses
+
+SRC_OBJS = $(patsubst src/%,bin/%.o,$(SRCS))
+RES_OBJS = $(patsubst res/%,bin/%.res,$(RES))
 
 CLEAN_PATTERNS = ./bin/* ./*.log
 
@@ -13,7 +17,7 @@ DEFS = 'VERSION="$(VERSION)"'
 WARNINGS = all extra no-char-subscripts no-switch
 CFLAGS = -std=gnu2x $(addprefix -W,$(WARNINGS)) $(OPTIM) $(addprefix -D,$(DEFS))
 
-all: $(patsubst src/%,bin/%.o,$(SRCS))
+all: $(SRC_OBJS) $(RES_OBJS)
 	$(CC) $(CFLAGS) -o bin/$(NAME) $^ $(addprefix -l,$(LIBS))
 
 debug: OPTIM = -O0
@@ -22,8 +26,14 @@ debug: WARNINGS += no-unused-label no-unused-variable
 debug: CFLAGS += -g
 debug: all
 
+sources-only: $(SRC_OBJS)
+resources-only: $(RES_OBJS)
+
 bin/%.c.o: src/%.c | bin
 	$(CC) $(CFLAGS) $(addprefix -I,$(INCLUDES)) -c -o $@ $^
+
+bin/%.res: res/% | bin
+	ld -r -b binary -o $@ $^
 
 bin:
 	mkdir -p bin

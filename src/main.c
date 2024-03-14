@@ -17,6 +17,7 @@
 
 #include "log.h"
 #include "messages.h"
+#include "resource.h"
 #include "util.h"
 
 // Although the screen only updates automatically 5 times every second, input
@@ -317,6 +318,17 @@ int main() {
 
                 case KEY_CTRL('W'):
                     exit(0);
+
+                case KEY_F(1):
+                    // Display help screen
+                    WIDGET_CIPHER_SELECT.visible = false;
+                    WIDGET_START_GAME_BTN.visible = false;
+                    WIDGET_DISPLAY_CIPHER.visible = false;
+
+                    WIDGET_HELP_SCREEN.visible = true;
+
+                    clear();
+                    break;
                 default:
                     // UI-specific key events
                     focused_widget->

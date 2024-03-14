@@ -1,8 +1,11 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include <time.h>
+
+#include <ncurses.h>
 
 /*
  * Cleaner-looking way to cast a pointer to another type and dereference it.
@@ -30,6 +33,12 @@ uint32_t fnv1a32(const char *msg);
  * succeeded and was not interrupted, this will be 0.
  */
 uintmax_t sleep_ms(uintmax_t ms);
+
+int wnputw(WINDOW *win, size_t n, const char *str);
+int mvwnputw(WINDOW *win, int y, int x, size_t n, const char *str);
+
+#define nputw(n, str) wnputw(stdscr, n, str)
+#define mvnputw(y, x, n, str) mvwnputw(stdscr, y, x, n, str)
 
 #endif  // _UTIL_H_
 

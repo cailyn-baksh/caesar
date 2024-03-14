@@ -1,6 +1,7 @@
 #include <threads.h>
 #include <time.h>
 
+#include "log.h"
 #include "util.h"
 
 uint32_t fnv1a32(const char *msg) {
@@ -32,3 +33,16 @@ uintmax_t sleep_ms(uintmax_t ms) {
     return 0;
 }
 
+int wnputw(WINDOW *win, size_t n, const char *str) {
+    for (; n != 0; --n, ++str) {
+        if (waddch(win, *str) == ERR) return ERR;
+    }
+
+    return OK;
+}
+
+int mvwnputw(WINDOW *win, int y, int x, size_t n, const char *str) {
+    if (wmove(win, y, x) == ERR) return ERR;
+
+    return wnputw(win, n, str);
+}
