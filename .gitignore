@@ -77,6 +77,7 @@ tags
 
 # Project specific
 bin/
+tmp/
 .cache/
 compile_commands.json
 

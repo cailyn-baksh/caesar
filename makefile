@@ -33,7 +33,7 @@ bin/%.c.o: src/%.c | bin
 	$(CC) $(CFLAGS) $(addprefix -I,$(INCLUDES)) -c -o $@ $^
 
 bin/%.res: res/% | bin
-	ld -r -b binary -o $@ $^
+	ld -r -T resources.ld -o $@ $^
 
 bin:
 	mkdir -p bin
